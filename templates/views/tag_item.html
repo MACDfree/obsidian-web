@@ -1,0 +1,13 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<h2>{{.tag}}</h2>
+<ul class="note-list">
+    {{range .list}}
+    <li>
+        <span>{{DateStr .Updated}}</span>
+        <a href="/note/{{.FullTitle}}">{{.FullTitle}}</a>
+    </li>
+    {{end}}
+</ul>
+{{ end }}

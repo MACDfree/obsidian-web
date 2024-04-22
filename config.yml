@@ -1,0 +1,7 @@
+note_path: "D:\\obnote"
+ignore_paths: [".git", "Excalidraw", "templates"]
+attachment_path: "attachments"
+paginate: 20
+title: "macd's note"
+password: ""
+bind_addr: "127.0.0.1:8888"

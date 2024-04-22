@@ -1,0 +1,11 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<ul>
+    {{range .list}}
+    <li>
+        <a href="/tag/{{.Tag}}">{{.Tag}}({{.Count}})</a>
+    </li>
+    {{end}}
+</ul>
+{{ end }}

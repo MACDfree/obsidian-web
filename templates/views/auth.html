@@ -1,0 +1,9 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<form action="/auth" method="post">
+    <label for="password">密码</label>
+    <input type="password" name="password" id="password">
+    <button type="submit">登录</button>
+</form>
+{{ end }}

@@ -1,0 +1,24 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<ul class="note-list">
+    {{- range .list -}}
+    <li>
+        <span>{{- DateStr .Updated -}}</span>
+        <a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+    </li>
+    {{- end -}}
+</ul>
+<nav>
+    {{- if eq .prePageIndex 0 -}}
+    <a href="/">上一页</a>
+    &nbsp;&nbsp;
+    {{- else if gt .prePageIndex 0 -}}
+    <a href="/page/{{.prePageIndex}}">上一页</a>
+    &nbsp;&nbsp;
+    {{- end -}}
+    {{- if gt .nexPageIndex -1 -}}
+    <a href="/page/{{.nexPageIndex}}">下一页</a>
+    {{- end -}}
+</nav>
+{{ end }}

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Site.Title }}</title>
+    <link rel="stylesheet" href="/main.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <!-- and it's easy to individually load additional languages -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/go.min.js"></script>
+
+    <!-- TODO 需要按需加载 -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>{{ .Site.Title }}</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="/">首页</a>
+                    </li>
+                    <li>
+                        <a href="/search">查询</a>
+                    </li>
+                    <li>
+                        <a href="/tag">标签</a>
+                    </li>
+                    <!-- <li>
+                        <a href="/archive">归档</a>
+                    </li> -->
+                    {{- if not .Auth.IsLogin -}}
+                    <li>
+                        <a href="/auth">登录</a>
+                    </li>
+                    {{- else -}}
+                    <li>
+                        <a href="/gitpull">git pull</a>
+                    </li>
+                    {{- end -}}
+                </ul>
+            </nav>
+        </header>
+
+        <main class="content">
+            {{block "content" .}}
+            {{end}}
+        </main>
+
+        <footer>
+            <p>
+                by macd
+            </p>
+        </footer>
+    </div>
+
+    <script>hljs.highlightAll();</script>
+</body>
+
+</html>

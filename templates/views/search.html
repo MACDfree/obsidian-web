@@ -1,0 +1,29 @@
+{{ template "base.html" . }}
+
+{{ define "content" }}
+<div class="search">
+    <form action="/search" method="get">
+        <label for="keyword">关键词</label>
+        <input type="text" name="keyword" id="keyword">
+        <button type="submit">搜索</button>
+    </form>
+    <div class="result">
+        {{- range .SearchResults -}}
+        <div class="item">
+            {{- if eq .HitTitle "" -}}
+            <div class="title"><a href="/note/{{.FullTitle}}">{{.FullTitle}}</a></div>
+            {{- else -}}
+            <div class="title"><a href="/note/{{.FullTitle}}">{{ .HitTitle | SafeHTML }}</a></div>
+            {{- end -}}
+            <div class="hit-text">
+                {{- range .HitText -}}
+                <div>{{ . | SafeHTML }}</div>
+                {{- end -}}
+            </div>
+        </div>
+        {{- else -}}
+        <div>没有找到结果</div>
+        {{- end -}}
+    </div>
+</div>
+{{ end }}
