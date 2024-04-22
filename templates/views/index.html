@@ -5,7 +5,7 @@
     {{- range .list -}}
     <li>
         <span>{{- DateStr .Updated -}}</span>
-        <a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+        <a href="/note/{{.FullTitle}}">{{- if .Publish -}}🌐{{- end -}}{{- .FullTitle -}}</a>
     </li>
     {{- end -}}
 </ul>
