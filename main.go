@@ -259,16 +259,21 @@ func main() {
 			return
 		}
 
+		markExt := make([]goldmark.Extender, 0)
+		markExt = append(markExt,
+			extension.GFM,
+			&frontmatter.Extender{},
+			&wikilink.Extender{
+				Resolver: myResolver{},
+			},
+		)
+
+		if note.ExtInfo != nil && note.ExtInfo["mathjax"] != nil && note.ExtInfo["mathjax"].(bool) {
+			markExt = append(markExt, mathjax.MathJax)
+		}
+
 		md := goldmark.New(
-			goldmark.WithExtensions(
-				extension.GFM,
-				&frontmatter.Extender{},
-				&wikilink.Extender{
-					Resolver: myResolver{},
-				},
-				// TODO 需要按需加载
-				mathjax.MathJax,
-			),
+			goldmark.WithExtensions(markExt...),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),
 			),
@@ -298,6 +303,8 @@ func main() {
 			"Site": gin.H{
 				"Title": config.Get().Title,
 			},
+			"IsNote":  true,
+			"ExtInfo": note.ExtInfo,
 			"info":    note,
 			"content": template.HTML(buf.String()),
 		})
@@ -633,17 +640,19 @@ func parseFrontMatter(mdPath string) (*db.Note, error) {
 		Updated: frontMatter.Updated.Time,
 		Publish: frontMatter.Publish,
 		Path:    mdPath,
+		ExtInfo: frontMatter.ExtInfo,
 	}
 	return note, nil
 }
 
 type FrontMatter struct {
-	Title   string   `yaml:"title"`
-	Tags    []string `yaml:"tags"`
-	Aliases []string `yaml:"aliases"`
-	Created CTime    `yaml:"created"`
-	Updated CTime    `yaml:"updated"`
-	Publish bool     `yaml:"publish"`
+	Title   string         `yaml:"title"`
+	Tags    []string       `yaml:"tags"`
+	Aliases []string       `yaml:"aliases"`
+	Created CTime          `yaml:"created"`
+	Updated CTime          `yaml:"updated"`
+	Publish bool           `yaml:"publish"`
+	ExtInfo map[string]any `yaml:",inline"`
 }
 
 type CTime struct {
