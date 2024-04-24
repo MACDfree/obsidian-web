@@ -77,10 +77,10 @@ func ListTag(isLogin bool) ([]TagCount, error) {
 func ListNoteByTag(isLogin bool, tag string) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
-		result := db.Where("tags like ?", "%\""+tag+"\"%").Find(&notes)
+		result := db.Where("tags like ?", "%\""+tag+"\"%").Order("updated desc").Find(&notes)
 		return notes, result.Error
 	} else {
-		result := db.Where("tags like ? and publish='1'", "%\""+tag+"\"%").Find(&notes)
+		result := db.Where("tags like ? and publish='1'", "%\""+tag+"\"%").Order("updated desc").Find(&notes)
 		return notes, result.Error
 	}
 }

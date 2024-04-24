@@ -91,7 +91,7 @@ func main() {
 		session.Options(sessions.Options{
 			MaxAge:   3600,
 			HttpOnly: true,
-			Secure:   true,
+			Secure:   false,
 		})
 		session.Set("isLogin", true)
 		err := session.Save()
