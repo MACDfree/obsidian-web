@@ -24,32 +24,6 @@ body {
   line-height: 1.5;
 }
 
-header.header {
-  height: 60px;
-}
-
-div.logowrap {
-  float: left;
-}
-
-a.logo {
-  font-size: 48px;
-  font-family: chancery, cursive, LiSu, sans-serif;
-  color: #34495e;
-  text-decoration: none;
-}
-
-a.logo:hover {
-  color: #34495e;
-  text-decoration: none;
-}
-
-nav.site-navbar {
-  float: right;
-  margin: 35px 5px 0 0;
-  font-size: 18px;
-}
-
 a {
   color: blue;
   text-decoration: none;
@@ -66,9 +40,50 @@ a:hover {
   padding: 0 10px;
 }
 
-.container > header {
-  padding-bottom: 5px;
-  border-bottom: 1px solid #999;
+header.header {
+  height: 60px;
+  padding: 20px;
+}
+
+div.logowrap {
+  float: left;
+}
+
+header.header a {
+  color: #34495e;
+  text-decoration: none;
+}
+
+header.header a:hover {
+  color: #34495e;
+  text-decoration: none;
+}
+
+a.logo {
+  font-size: 48px;
+  font-family: chancery, cursive, LiSu, sans-serif;
+}
+
+nav.site-navbar {
+  float: right;
+  font-size: 18px;
+  padding-right: 25px;
+}
+
+nav.site-navbar > ul {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  list-style: none;
+  padding-inline-start: 0;
+}
+
+nav.site-navbar a:hover {
+  text-decoration: underline;
+}
+
+main.content {
+  padding: 0 20px;
 }
 
 .content > article img {
@@ -86,15 +101,6 @@ a:hover {
 
 .content > article .hljs {
   line-height: 1em;
-}
-
-nav > ul {
-  display: flex;
-  flex-direction: row;
-  align-content: center;
-  list-style: none;
-  padding-inline-start: 0;
-  margin: 0;
 }
 
 nav > ul > li {
