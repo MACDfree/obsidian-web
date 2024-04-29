@@ -1,81 +1,137 @@
+@charset "UTF-8";
+@font-face {
+  font-family: chancery;
+  src: url(./fonts/chancery/apple-chancery-webfont.eot);
+  src: local("Apple Chancery"),
+    url(./fonts/chancery/apple-chancery-webfont.eot?#iefix)
+      format("embedded-opentype"),
+    url(./fonts/chancery/apple-chancery-webfont.woff2) format("woff2"),
+    url(./fonts/chancery/apple-chancery-webfont.woff) format("woff"),
+    url(./fonts/chancery/apple-chancery-webfont.ttf) format("truetype"),
+    url(./fonts/chancery/apple-chancery-webfont.svg#apple-chancery)
+      format("svg");
+  font-weight: lighter;
+  font-style: normal;
+  font-display: swap;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: source sans pro, helvetica neue, Arial, sans-serif;
+  line-height: 1.5;
+}
+
+header.header {
+  height: 60px;
+}
+
+div.logowrap {
+  float: left;
+}
+
+a.logo {
+  font-size: 48px;
+  font-family: chancery, cursive, LiSu, sans-serif;
+  color: #34495e;
+  text-decoration: none;
+}
+
+a.logo:hover {
+  color: #34495e;
+  text-decoration: none;
+}
+
+nav.site-navbar {
+  float: right;
+  margin: 35px 5px 0 0;
+  font-size: 18px;
+}
+
 a {
-    color: blue;
-	text-decoration: none;
+  color: blue;
+  text-decoration: none;
 }
 
 a:hover {
-    color: blue;
-	text-decoration: underline;
+  color: blue;
+  text-decoration: underline;
 }
 
 .container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 0 10px;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 10px;
 }
 
-.container>header {
-    padding-bottom: 5px;
-    border-bottom: 1px solid #999;
+.container > header {
+  padding-bottom: 5px;
+  border-bottom: 1px solid #999;
 }
 
-.content>article img {
-    max-width: 100% ;
+.content > article img {
+  max-width: 100%;
 }
 
-.content>article blockquote {
-    margin-block: 0;
-    margin-inline: 0;
-    padding: 3px 10px;
-    background-color: #f3f3f3;
-    margin-bottom: 15px;
-    border-left: 2px solid #24292f;
+.content > article blockquote {
+  margin-block: 0;
+  margin-inline: 0;
+  padding: 3px 10px;
+  background-color: #f3f3f3;
+  margin-bottom: 15px;
+  border-left: 2px solid #24292f;
 }
 
-nav>ul {
-    display: flex;
-    flex-direction: row;
-    align-content: center;
-    list-style: none;
-    padding-inline-start: 0;
-    margin: 0;
+.content > article .hljs {
+  line-height: 1em;
 }
 
-nav>ul>li {
-    padding: 2px 0;
-    margin-right: 10px;
+nav > ul {
+  display: flex;
+  flex-direction: row;
+  align-content: center;
+  list-style: none;
+  padding-inline-start: 0;
+  margin: 0;
 }
 
-ul.note-list>li {
-    margin-bottom: 5px;
+nav > ul > li {
+  padding: 2px 0;
+  margin-right: 10px;
 }
 
-ul.note-list>li>span {
-    padding-right: 10px;
+ul.note-list > li {
+  margin-bottom: 5px;
 }
 
-.search>form {
-    padding: 10px 0 5px 0;
+ul.note-list > li > span {
+  padding-right: 10px;
+}
+
+.search > form {
+  padding: 10px 0 5px 0;
 }
 
 .search .result .item {
-    padding: 5px 0;
-    border-bottom: 1px solid #444;
+  padding: 5px 0;
+  border-bottom: 1px solid #444;
 }
 
 .search .result .item:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
-.search .result .item .hit-text>div {
-    padding: 2px 0;
-    border-bottom: 1px dashed #444;
+.search .result .item .hit-text > div {
+  padding: 2px 0;
+  border-bottom: 1px dashed #444;
 }
 
-.search .result .item .hit-text>div:last-child {
-    border-bottom: none;
+.search .result .item .hit-text > div:last-child {
+  border-bottom: none;
 }
 
-footer>p {
-    text-align: center;
+footer > p {
+  text-align: center;
 }
