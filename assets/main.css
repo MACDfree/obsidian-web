@@ -82,6 +82,11 @@ nav.site-navbar a:hover {
   text-decoration: underline;
 }
 
+nav.site-navbar > ul > li {
+  padding: 2px 0;
+  margin-right: 10px;
+}
+
 main.content {
   padding: 0 20px;
 }
@@ -101,11 +106,6 @@ main.content {
 
 .content > article .hljs {
   line-height: 1em;
-}
-
-nav > ul > li {
-  padding: 2px 0;
-  margin-right: 10px;
 }
 
 ul.note-list > li {
@@ -140,4 +140,21 @@ ul.note-list > li > span {
 
 footer > p {
   text-align: center;
+}
+
+@media screen and (max-width: 800px) {
+  a.logo {
+    font-size: 30px;
+  }
+  nav.site-navbar {
+    font-size: 14px;
+    padding-right: 0;
+  }
+  nav.site-navbar > ul > li {
+    padding: 0;
+    margin-right: 5px;
+  }
+  main.content {
+    padding: 0;
+  }
 }
