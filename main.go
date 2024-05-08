@@ -253,8 +253,13 @@ func main() {
 			return
 		}
 
+		// 解决登录后页面缓存导致不刷新的问题
+		isLoginStr := "0"
+		if isLogin {
+			isLoginStr = "1"
+		}
 		ifNoneMatch := ctx.GetHeader("If-None-Match")
-		if ifNoneMatch == "\""+note.MD5+"\"" {
+		if ifNoneMatch == "\""+note.MD5+isLoginStr+"\"" {
 			ctx.Status(304)
 			return
 		}
@@ -295,7 +300,7 @@ func main() {
 			return
 		}
 
-		ctx.Header("ETag", "\""+note.MD5+"\"")
+		ctx.Header("ETag", "\""+note.MD5+isLoginStr+"\"")
 		ctx.HTML(200, "note.html", gin.H{
 			"Auth": gin.H{
 				"IsLogin": isLogin,
