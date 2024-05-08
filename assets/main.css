@@ -91,6 +91,10 @@ main.content {
   padding: 0 20px;
 }
 
+.content > article {
+  word-break: break-all;
+}
+
 .content > article img {
   max-width: 100%;
 }
@@ -105,7 +109,8 @@ main.content {
 }
 
 .content > article .hljs {
-  line-height: 1em;
+  line-height: 1.1em;
+  font-size: 14px;
 }
 
 ul.note-list > li {
