@@ -22,6 +22,7 @@ html {
 body {
   font-family: source sans pro, helvetica neue, Arial, sans-serif;
   line-height: 1.5;
+  background-color: #fdfdfd;
 }
 
 a {
@@ -35,7 +36,7 @@ a:hover {
 }
 
 .container {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 0 10px;
 }
