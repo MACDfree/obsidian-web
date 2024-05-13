@@ -50,6 +50,7 @@ import (
 var preScript = flag.String("pre", "", "pre script")
 
 func main() {
+	flag.Parse()
 	if *preScript != "" {
 		log.Infof("start pre script: %s", *preScript)
 		cmd := exec.Command("sh", "-c", *preScript)
