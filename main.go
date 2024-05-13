@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/hex"
+	"flag"
 	"html/template"
 	"io"
 	"net/http"
@@ -45,7 +46,26 @@ import (
 2. 实现一个web服务，提供笔记的访问和鉴权逻辑
 */
 
+// preScript用于执行启动前的一系列脚本
+var preScript = flag.String("pre", "", "pre script")
+
 func main() {
+	if *preScript != "" {
+		log.Infof("start pre script: %s", *preScript)
+		cmd := exec.Command("sh", "-c", *preScript)
+		cmd.Dir = ""
+		sout := bytes.NewBuffer(nil)
+		cmd.Stdout = sout
+		serr := bytes.NewBuffer(nil)
+		cmd.Stderr = serr
+		err := cmd.Run()
+		if err != nil {
+			log.Error("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
+			log.Fatalf("%+v", errors.WithStack(err))
+		}
+		log.Error("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
+	}
+
 	loadNoteBook()
 
 	r := gin.Default()
