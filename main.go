@@ -36,6 +36,8 @@ import (
 	"go.abhg.dev/goldmark/wikilink"
 	"gopkg.in/yaml.v3"
 	"gorm.io/gorm"
+
+	"github.com/robfig/cron/v3"
 )
 
 /*
@@ -458,6 +460,26 @@ func main() {
 			"serr": serr.String(),
 		})
 	})
+
+	c := cron.New()
+	c.AddFunc("11 12 4 * * *", func() {
+		log.Info("开始执行git pull")
+		cmd := exec.Command("git", "pull")
+		cmd.Dir = config.Get().NotePath
+		sout := bytes.NewBuffer(nil)
+		cmd.Stdout = sout
+		serr := bytes.NewBuffer(nil)
+		cmd.Stderr = serr
+		err := cmd.Run()
+		if err != nil {
+			log.Error(errors.WithStack(err))
+			return
+		}
+
+		// 需要重新解析文件
+		loadNoteBook()
+	})
+	c.Start()
 
 	r.Run(config.Get().BindAddr)
 }
