@@ -2,6 +2,7 @@ package db
 
 import (
 	"obsidian-web/config"
+	"strings"
 	"time"
 
 	"gorm.io/driver/sqlite"
@@ -45,9 +46,15 @@ func ListNote(isLogin bool, pageIndex int) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
 		result := db.Order("updated desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
+		for i := range notes {
+			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
+		}
 		return notes, result.Error
 	} else {
 		result := db.Where("publish = ?", true).Order("updated desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
+		for i := range notes {
+			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
+		}
 		return notes, result.Error
 	}
 }
@@ -56,9 +63,15 @@ func ListAllNote(isLogin bool) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
 		result := db.Order("updated desc").Find(&notes)
+		for i := range notes {
+			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
+		}
 		return notes, result.Error
 	} else {
 		result := db.Where("publish = ?", true).Order("updated desc").Find(&notes)
+		for i := range notes {
+			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
+		}
 		return notes, result.Error
 	}
 }
