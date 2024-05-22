@@ -63,10 +63,10 @@ func main() {
 		cmd.Stderr = serr
 		err := cmd.Run()
 		if err != nil {
-			log.Error("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
+			log.Errorf("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
 			log.Fatalf("%+v", errors.WithStack(err))
 		}
-		log.Error("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
+		log.Infof("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
 	}
 
 	loadNoteBook()
@@ -462,7 +462,7 @@ func main() {
 	})
 
 	c := cron.New()
-	c.AddFunc("11 12 4 * * *", func() {
+	_, err := c.AddFunc("12 4 * * *", func() {
 		log.Info("开始执行git pull")
 		cmd := exec.Command("git", "pull")
 		cmd.Dir = config.Get().NotePath
@@ -479,7 +479,11 @@ func main() {
 		// 需要重新解析文件
 		loadNoteBook()
 	})
-	c.Start()
+	if err != nil {
+		log.Error(errors.WithStack(err))
+	} else {
+		c.Start()
+	}
 
 	r.Run(config.Get().BindAddr)
 }
