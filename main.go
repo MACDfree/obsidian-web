@@ -76,6 +76,7 @@ func main() {
 
 	authKey := os.Getenv("key1")
 	encKey := os.Getenv("key2")
+	log.Infof("key1: %s\tkey2: %s", authKey, encKey)
 	store := memstore.NewStore([]byte(authKey), []byte(encKey))
 	r.Use(sessions.Sessions("webauth", store))
 
