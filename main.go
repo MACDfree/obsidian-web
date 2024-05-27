@@ -23,7 +23,7 @@ import (
 
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-contrib/sessions"
-	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
 	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/pkg/errors"
@@ -74,7 +74,9 @@ func main() {
 	r := gin.Default()
 	r.HTMLRender = loadTemplates("templates")
 
-	store := cookie.NewStore([]byte("secret"))
+	authKey := os.Getenv("key1")
+	encKey := os.Getenv("key2")
+	store := memstore.NewStore([]byte(authKey), []byte(encKey))
 	r.Use(sessions.Sessions("webauth", store))
 
 	r.Use(Auth())
