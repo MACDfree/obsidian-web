@@ -81,6 +81,22 @@ func main() {
 	r.Use(sessions.Sessions("webauth", store))
 
 	r.Use(Auth())
+	r.Use(func(ctx *gin.Context) {
+		ctx.Next()
+
+		if ctx.Writer.Status() == 500 || ctx.Writer.Status() == 404 {
+			isLogin := ctx.MustGet("isLogin").(bool)
+			ctx.HTML(ctx.Writer.Status(), strconv.Itoa(ctx.Writer.Status())+".html", gin.H{
+				"Auth": gin.H{
+					"IsLogin": isLogin,
+				},
+				"Site": gin.H{
+					"Title": config.Get().Title,
+				},
+			})
+			return
+		}
+	})
 
 	r.StaticFS("/assets", http.Dir("assets"))
 
@@ -463,6 +479,46 @@ func main() {
 			"serr": serr.String(),
 		})
 	})
+
+	r.GET("/error/404", func(ctx *gin.Context) {
+		isLogin := ctx.MustGet("isLogin").(bool)
+		ctx.HTML(http.StatusNotFound, "404.html", gin.H{
+			"Auth": gin.H{
+				"IsLogin": isLogin,
+			},
+			"Site": gin.H{
+				"Title": config.Get().Title,
+			},
+		})
+	})
+
+	r.GET("/error/500", func(ctx *gin.Context) {
+		isLogin := ctx.MustGet("isLogin").(bool)
+		ctx.HTML(http.StatusInternalServerError, "500.html", gin.H{
+			"Auth": gin.H{
+				"IsLogin": isLogin,
+			},
+			"Site": gin.H{
+				"Title": config.Get().Title,
+			},
+		})
+	})
+
+	// r.NoRoute(func(ctx *gin.Context) {
+	// 	isLogin := ctx.MustGet("isLogin").(bool)
+	// 	ctx.HTML(http.StatusOK, "404.html", gin.H{
+	// 		"Auth": gin.H{
+	// 			"IsLogin": isLogin,
+	// 		},
+	// 		"Site": gin.H{
+	// 			"Title": config.Get().Title,
+	// 		},
+	// 	})
+	// })
+
+	// r.NoRoute(func(ctx *gin.Context) {
+	// 	ctx.Redirect(302, "/error/404")
+	// })
 
 	c := cron.New()
 	_, err := c.AddFunc("12 4 * * *", func() {
