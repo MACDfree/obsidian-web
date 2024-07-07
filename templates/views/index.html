@@ -6,6 +6,11 @@
     <li>
         <span>{{- DateStr .Updated -}}</span>
         {{- if .Publish -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+        <span class="tags">
+            {{- range .Tags -}}
+            <a href="/tag/{{.}}">#{{.}}</a>
+            {{- end -}}
+        </span>
     </li>
     {{- end -}}
 </ul>

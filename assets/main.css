@@ -122,6 +122,15 @@ ul.note-list > li {
   margin-bottom: 5px;
 }
 
+.note-list .tags {
+  padding-left: 5px;
+  font-size: 12px;
+}
+
+.note-list .tags>a {
+  padding-right: 5px;
+}
+
 ul.note-list > li > span {
   padding-right: 10px;
 }
