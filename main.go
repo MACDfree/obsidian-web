@@ -123,23 +123,36 @@ func main() {
 			return
 		}
 
-		password := ctx.PostForm("password")
-		if password != config.Get().Password {
-			ctx.Redirect(302, "/auth")
-			return
-		}
-
 		session := sessions.Default(ctx)
 		session.Options(sessions.Options{
 			MaxAge:   3600,
 			HttpOnly: true,
 			Secure:   false,
 		})
+
+		if session.Get("error") != nil && session.Get("error").(int) > 3 {
+			ctx.Redirect(302, "/auth")
+			return
+		}
+
+		password := ctx.PostForm("password")
+		if password != config.Get().Password {
+			if session.Get("error") == nil {
+				session.Set("error", 1)
+			} else {
+				session.Set("error", session.Get("error").(int)+1)
+			}
+			ctx.Redirect(302, "/auth")
+			return
+		}
+
+		session.Set("error", 0)
+
 		session.Set("isLogin", true)
 		err := session.Save()
 		if err != nil {
 			log.Error(errors.WithStack(err))
-			ctx.String(500, "error: %v", err)
+			ctx.Redirect(302, "/auth")
 			return
 		}
 		ctx.Redirect(302, "/")
