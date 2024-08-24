@@ -76,6 +76,8 @@ func main() {
 
 	authKey := os.Getenv("key1")
 	encKey := os.Getenv("key2")
+	// authKey = "12345678901234561234567890123456"
+	// encKey = "12345678901234561234567890123456"
 	if authKey == "" || encKey == "" {
 		log.Fatalf("authKey or encKey is empty")
 	}
