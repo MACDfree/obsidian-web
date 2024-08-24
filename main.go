@@ -76,6 +76,9 @@ func main() {
 
 	authKey := os.Getenv("key1")
 	encKey := os.Getenv("key2")
+	if authKey == "" || encKey == "" {
+		log.Fatalf("authKey or encKey is empty")
+	}
 	log.Infof("key1: %s\tkey2: %s", authKey, encKey)
 	store := memstore.NewStore([]byte(authKey), []byte(encKey))
 	r.Use(sessions.Sessions("webauth", store))
@@ -131,6 +134,7 @@ func main() {
 		})
 
 		if session.Get("error") != nil && session.Get("error").(int) > 3 {
+			log.Warn("max wrong password tims")
 			ctx.Redirect(302, "/auth")
 			return
 		}
@@ -138,9 +142,15 @@ func main() {
 		password := ctx.PostForm("password")
 		if password != config.Get().Password {
 			if session.Get("error") == nil {
+				log.Warn("wrong password: 1")
 				session.Set("error", 1)
 			} else {
+				log.Warn("wrong password: " + strconv.Itoa(session.Get("error").(int)))
 				session.Set("error", session.Get("error").(int)+1)
+			}
+			err := session.Save()
+			if err != nil {
+				log.Error(errors.WithStack(err))
 			}
 			ctx.Redirect(302, "/auth")
 			return
