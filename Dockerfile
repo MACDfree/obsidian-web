@@ -1,5 +1,4 @@
-# alpine降级为3.18，否则sqlite编译会报错
-FROM golang:1.22.2-alpine3.18 AS builder
+FROM golang:1.23.1-alpine3.19 AS builder
 
 WORKDIR /build
 
@@ -13,7 +12,7 @@ COPY . .
 RUN go build -ldflags="-s -w"
 RUN upx ./obsidian-web
 
-FROM alpine:3.18
+FROM alpine:3.19
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
 && apk update && apk add --no-cache tzdata \
