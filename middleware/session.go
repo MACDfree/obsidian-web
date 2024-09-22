@@ -15,8 +15,8 @@ var (
 )
 
 func Session(name string) gin.HandlerFunc {
-	authKey = "12345678901234561234567890123456"
-	encKey = "12345678901234561234567890123456"
+	// authKey = "12345678901234561234567890123456"
+	// encKey = "12345678901234561234567890123456"
 
 	if authKey == "" || encKey == "" {
 		log.Fatalf("authKey or encKey is empty")
