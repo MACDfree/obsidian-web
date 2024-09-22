@@ -20,10 +20,9 @@ import (
 
 var markdown goldmark.Markdown
 var markdownWithMathJax goldmark.Markdown
-var once sync.Once
 
 func init() {
-	once.Do(func() {
+	sync.OnceFunc(func() {
 		markdown = goldmark.New(
 			goldmark.WithExtensions(
 				extension.GFM,
@@ -64,7 +63,7 @@ func init() {
 				),
 			),
 		)
-	})
+	})()
 }
 
 var exts = []string{
