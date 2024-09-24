@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"os"
 
 	"github.com/gin-contrib/sessions"
@@ -19,9 +19,9 @@ func Session(name string) gin.HandlerFunc {
 	// encKey = "12345678901234561234567890123456"
 
 	if authKey == "" || encKey == "" {
-		log.Fatalf("authKey or encKey is empty")
+		logger.Fatalf("authKey or encKey is empty")
 	}
-	log.Infof("key1: %s\tkey2: %s", authKey, encKey)
+	logger.Infof("key1: %s\tkey2: %s", authKey, encKey)
 	store := memstore.NewStore([]byte(authKey), []byte(encKey))
 	return sessions.Sessions(name, store)
 }

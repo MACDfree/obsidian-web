@@ -1,3 +1,4 @@
 obsidian-web*
 *.db
 *.log
+logs/

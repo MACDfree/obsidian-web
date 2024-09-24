@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"obsidian-web/config"
 	"obsidian-web/db"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"obsidian-web/mdparser"
 	"os"
 	"path/filepath"
@@ -25,14 +25,14 @@ func ListNotes(ctx *gin.Context) {
 	}
 	pageIndex, err := strconv.Atoi(pageIndexStr)
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
 	isLogin := ctx.MustGet("isLogin").(bool)
 	notes, err := db.ListNote(isLogin, pageIndex)
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
@@ -62,7 +62,7 @@ func ListTags(ctx *gin.Context) {
 		// 展示所有的tag
 		tagCounts, err := db.ListTag(isLogin)
 		if err != nil {
-			log.Error(errors.WithStack(err))
+			logger.Error(errors.WithStack(err))
 			ctx.String(500, "error: %v", err)
 			return
 		}
@@ -80,7 +80,7 @@ func ListTags(ctx *gin.Context) {
 		tag = strings.TrimPrefix(tag, "/")
 		notes, err := db.ListNoteByTag(isLogin, tag)
 		if err != nil {
-			log.Error(errors.WithStack(err))
+			logger.Error(errors.WithStack(err))
 			ctx.String(500, "error: %v", err)
 			return
 		}
@@ -115,7 +115,7 @@ func NotePage(ctx *gin.Context) {
 			ctx.Status(404)
 			return
 		}
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
@@ -138,7 +138,7 @@ func NotePage(ctx *gin.Context) {
 
 	source, err := os.ReadFile(note.Path)
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
@@ -148,7 +148,7 @@ func NotePage(ctx *gin.Context) {
 	htmlStr, err := mdparser.ConvertToHTML(source, withMathJax)
 
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
@@ -189,7 +189,7 @@ func SearchNotes(ctx *gin.Context) {
 	// 先从数据库中查找当前可以访问的文件
 	notes, err := db.ListAllNote(isLogin)
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
@@ -204,7 +204,7 @@ func SearchNotes(ctx *gin.Context) {
 		// 下面需要打开文档进行匹配了
 		mdFile, err := os.Open(note.Path)
 		if err != nil {
-			log.Error(errors.WithStack(err))
+			logger.Error(errors.WithStack(err))
 			ctx.String(500, "error: %v", err)
 			return
 		}

@@ -3,7 +3,7 @@ package job
 import (
 	"bytes"
 	"obsidian-web/config"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"obsidian-web/noteloader"
 	"os/exec"
 
@@ -14,7 +14,7 @@ import (
 func Start() {
 	c := cron.New()
 	_, err := c.AddFunc("12 4 * * *", func() {
-		log.Info("开始执行git pull")
+		logger.Info("开始执行git pull")
 		cmd := exec.Command("git", "pull")
 		cmd.Dir = config.Get().NotePath
 		sout := bytes.NewBuffer(nil)
@@ -23,7 +23,7 @@ func Start() {
 		cmd.Stderr = serr
 		err := cmd.Run()
 		if err != nil {
-			log.Error(errors.WithStack(err))
+			logger.Error(errors.WithStack(err))
 			return
 		}
 
@@ -31,7 +31,7 @@ func Start() {
 		noteloader.Load()
 	})
 	if err != nil {
-		log.Fatal(errors.WithStack(err))
+		logger.Fatal(errors.WithStack(err))
 	} else {
 		c.Start()
 	}

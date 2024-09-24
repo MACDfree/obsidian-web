@@ -7,7 +7,7 @@ import (
 	"io"
 	"obsidian-web/config"
 	"obsidian-web/db"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +26,7 @@ func loadNoteBook() {
 	start := time.Now()
 	err := db.DeleteAll()
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		return
 	}
 	rootPath := config.Get().NotePath
@@ -49,7 +49,7 @@ func loadNoteBook() {
 			// 执行解析逻辑
 			note, err := parseFrontMatter(path)
 			if err != nil {
-				log.Error(errors.WithStack(err))
+				logger.Error(errors.WithStack(err))
 				return nil
 			}
 			if note.Tags == nil {
@@ -72,7 +72,7 @@ func loadNoteBook() {
 					str := fullTitle[len("daily note/"):]
 					t, err := time.Parse("2006-01-02", str)
 					if err != nil {
-						log.Error(errors.WithStack(err))
+						logger.Error(errors.WithStack(err))
 					}
 					note.Created = t
 					note.Updated = t
@@ -81,14 +81,14 @@ func loadNoteBook() {
 
 			md, err := fileMD5(path)
 			if err != nil {
-				log.Error(errors.WithStack(err))
+				logger.Error(errors.WithStack(err))
 				return nil
 			}
 			note.MD5 = md
 
 			err = db.InsertNote(note)
 			if err != nil {
-				log.Error(errors.WithStack(err))
+				logger.Error(errors.WithStack(err))
 			}
 		} else if strings.HasPrefix(path[len(rootPath)+1:], attachPath) {
 			// 处理附件元信息
@@ -98,15 +98,15 @@ func loadNoteBook() {
 			}
 			err := db.InsertAttachInfo(attachInfo)
 			if err != nil {
-				log.Error(errors.WithStack(err))
+				logger.Error(errors.WithStack(err))
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 	}
-	log.Infof("init notebook cost: %v", time.Since(start))
+	logger.Infof("init notebook cost: %v", time.Since(start))
 }
 
 func parseFrontMatter(mdPath string) (*db.Note, error) {
@@ -181,7 +181,7 @@ func (cTime *CTime) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind == yaml.ScalarNode {
 		t, err := time.Parse("2006-01-02T15:04", value.Value)
 		if err != nil {
-			log.Warnf("再试一次，%+v", err)
+			logger.Warnf("再试一次，%+v", err)
 			t, err = time.Parse("2006-01-02T15:04:05", value.Value)
 			if err != nil {
 				return err

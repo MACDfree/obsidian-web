@@ -3,7 +3,7 @@ package handler
 import (
 	"net/http"
 	"obsidian-web/config"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"strconv"
 
 	"github.com/gin-contrib/sessions"
@@ -43,7 +43,7 @@ func Auth(ctx *gin.Context) {
 	})
 
 	if session.Get("error") != nil && session.Get("error").(int) > 3 {
-		log.Warn("max wrong password tims")
+		logger.Warn("max wrong password tims")
 		ctx.Redirect(302, "/auth")
 		return
 	}
@@ -51,15 +51,15 @@ func Auth(ctx *gin.Context) {
 	password := ctx.PostForm("password")
 	if password != config.Get().Password {
 		if session.Get("error") == nil {
-			log.Warn("wrong password: 1")
+			logger.Warn("wrong password: 1")
 			session.Set("error", 1)
 		} else {
-			log.Warn("wrong password: " + strconv.Itoa(session.Get("error").(int)))
+			logger.Warn("wrong password: " + strconv.Itoa(session.Get("error").(int)))
 			session.Set("error", session.Get("error").(int)+1)
 		}
 		err := session.Save()
 		if err != nil {
-			log.Error(errors.WithStack(err))
+			logger.Error(errors.WithStack(err))
 		}
 		ctx.Redirect(302, "/auth")
 		return
@@ -70,7 +70,7 @@ func Auth(ctx *gin.Context) {
 	session.Set("isLogin", true)
 	err := session.Save()
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.Redirect(302, "/auth")
 		return
 	}

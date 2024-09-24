@@ -3,7 +3,7 @@ package handler
 import (
 	"bytes"
 	"obsidian-web/config"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"obsidian-web/noteloader"
 	"os/exec"
 
@@ -45,7 +45,7 @@ func GitPull(ctx *gin.Context) {
 	cmd.Stderr = serr
 	err := cmd.Run()
 	if err != nil {
-		log.Error(errors.WithStack(err))
+		logger.Error(errors.WithStack(err))
 		ctx.JSON(500, gin.H{
 			"msg":  "git pull 报错",
 			"sout": sout.String(),

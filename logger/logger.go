@@ -1,4 +1,4 @@
-package log
+package logger
 
 import (
 	"io"
@@ -18,7 +18,7 @@ func init() {
 		panic(err)
 	}
 	exPath := filepath.Dir(ex)
-	logPath := filepath.Join(exPath, "obweb.log")
+	logPath := filepath.Join(exPath, "logs/app.log")
 	lumberJackLogger := &lumberjack.Logger{
 		Filename:   logPath,
 		MaxSize:    10,

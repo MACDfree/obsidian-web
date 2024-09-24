@@ -5,7 +5,7 @@ import (
 	"io"
 	"net/http"
 	"obsidian-web/handler"
-	"obsidian-web/log"
+	"obsidian-web/logger"
 	"obsidian-web/middleware"
 	"os"
 	"path/filepath"
@@ -20,7 +20,7 @@ import (
 func NewRouter() *gin.Engine {
 	gin.DisableConsoleColor()
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "access.log",
+		Filename:   "logs/access.log",
 		MaxSize:    100,
 		MaxBackups: 0,
 		MaxAge:     180,
@@ -59,12 +59,12 @@ func loadTemplates(templatesPath string) multitemplate.Renderer {
 
 	partials, err := filepath.Glob(templatesPath + "/partials/*.html")
 	if err != nil {
-		log.Fatal(errors.WithStack(err))
+		logger.Fatal(errors.WithStack(err))
 	}
 
 	views, err := filepath.Glob(templatesPath + "/views/*.html")
 	if err != nil {
-		log.Fatal(errors.WithStack(err))
+		logger.Fatal(errors.WithStack(err))
 	}
 
 	funcMap := template.FuncMap{
