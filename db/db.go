@@ -1,20 +1,46 @@
 package db
 
 import (
+	"io"
+	"log"
 	"obsidian-web/config"
+	"os"
 	"strings"
 	"time"
 
+	"gopkg.in/natefinch/lumberjack.v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
 
 func init() {
+	lumberJackLogger := &lumberjack.Logger{
+		Filename:   "logs/gorm.log",
+		MaxSize:    100,
+		MaxBackups: 0,
+		MaxAge:     180,
+		Compress:   false,
+	}
+	out := io.MultiWriter(lumberJackLogger, os.Stdout)
+	newLogger := gormlogger.New(
+		log.New(out, "\r\n", log.LstdFlags), // io writer
+		gormlogger.Config{
+			SlowThreshold:             time.Second,       // Slow SQL threshold
+			LogLevel:                  gormlogger.Silent, // Log level
+			IgnoreRecordNotFoundError: true,              // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,              // Don't include params in the SQL log
+			Colorful:                  false,             // Disable color
+		},
+	)
+
 	var err error
 	// db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
+		Logger: newLogger,
+	})
 	if err != nil {
 		panic("failed to connect database")
 	}

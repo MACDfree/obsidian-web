@@ -3,24 +3,17 @@ package logger
 import (
 	"io"
 	"os"
-	"path/filepath"
 
-	"github.com/natefinch/lumberjack"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var _logger *zap.SugaredLogger
 
 func init() {
-	ex, err := os.Executable()
-	if err != nil {
-		panic(err)
-	}
-	exPath := filepath.Dir(ex)
-	logPath := filepath.Join(exPath, "logs/app.log")
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   logPath,
+		Filename:   "logs/app.log",
 		MaxSize:    10,
 		MaxBackups: 5,
 		MaxAge:     30,
