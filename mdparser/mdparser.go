@@ -5,9 +5,11 @@ import (
 	"path/filepath"
 	"sync"
 
+	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
 	mathjax "github.com/litao91/goldmark-mathjax"
 	"github.com/samber/lo"
 	"github.com/yuin/goldmark"
+	highlighting "github.com/yuin/goldmark-highlighting/v2"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/extension"
 	"github.com/yuin/goldmark/parser"
@@ -30,6 +32,13 @@ func init() {
 				&wikilink.Extender{
 					Resolver: myResolver{},
 				},
+				highlighting.NewHighlighting(
+					highlighting.WithStyle("monokai"),
+					highlighting.WithFormatOptions(
+						chromahtml.WithLineNumbers(true),
+						chromahtml.TabWidth(4),
+					),
+				),
 			),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),
