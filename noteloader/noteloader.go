@@ -179,10 +179,10 @@ func (cTime CTime) MarshalYAML() (interface{}, error) {
 
 func (cTime *CTime) UnmarshalYAML(value *yaml.Node) error {
 	if value.Kind == yaml.ScalarNode {
-		t, err := time.Parse("2006-01-02T15:04", value.Value)
+		t, err := time.ParseInLocation("2006-01-02T15:04", value.Value, time.Local)
 		if err != nil {
 			logger.Warnf("再试一次，%+v", err)
-			t, err = time.Parse("2006-01-02T15:04:05", value.Value)
+			t, err = time.ParseInLocation("2006-01-02T15:04:05", value.Value, time.Local)
 			if err != nil {
 				return err
 			}

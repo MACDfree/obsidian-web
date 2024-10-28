@@ -9,8 +9,8 @@ import (
 	"obsidian-web/middleware"
 	"os"
 	"path/filepath"
-	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/gin-contrib/multitemplate"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -67,13 +67,9 @@ func loadTemplates(templatesPath string) multitemplate.Renderer {
 		logger.Fatal(errors.WithStack(err))
 	}
 
-	funcMap := template.FuncMap{
-		"DateStr": func(d time.Time) string {
-			return d.Format("2006-01-02")
-		},
-		"SafeHTML": func(s string) template.HTML {
-			return template.HTML(s)
-		},
+	funcMap := sprig.FuncMap()
+	funcMap["SafeHTML"] = func(s string) template.HTML {
+		return template.HTML(s)
 	}
 
 	for _, view := range views {

@@ -71,13 +71,13 @@ func InsertNote(note *Note) error {
 func ListNote(isLogin bool, pageIndex int) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
-		result := db.Order("updated desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
+		result := db.Order("created desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
 		for i := range notes {
 			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
 		}
 		return notes, result.Error
 	} else {
-		result := db.Where("publish = ?", true).Order("updated desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
+		result := db.Where("publish = ?", true).Order("created desc").Limit(config.Get().Paginate).Offset(config.Get().Paginate * pageIndex).Find(&notes)
 		for i := range notes {
 			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
 		}
@@ -88,13 +88,13 @@ func ListNote(isLogin bool, pageIndex int) ([]Note, error) {
 func ListAllNote(isLogin bool) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
-		result := db.Order("updated desc").Find(&notes)
+		result := db.Order("created desc").Find(&notes)
 		for i := range notes {
 			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
 		}
 		return notes, result.Error
 	} else {
-		result := db.Where("publish = ?", true).Order("updated desc").Find(&notes)
+		result := db.Where("publish = ?", true).Order("created desc").Find(&notes)
 		for i := range notes {
 			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
 		}
@@ -116,10 +116,10 @@ func ListTag(isLogin bool) ([]TagCount, error) {
 func ListNoteByTag(isLogin bool, tag string) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
 	if isLogin {
-		result := db.Where("tags like ?", "%\""+tag+"\"%").Order("updated desc").Find(&notes)
+		result := db.Where("tags like ?", "%\""+tag+"\"%").Order("created desc").Find(&notes)
 		return notes, result.Error
 	} else {
-		result := db.Where("tags like ? and publish='1'", "%\""+tag+"\"%").Order("updated desc").Find(&notes)
+		result := db.Where("tags like ? and publish='1'", "%\""+tag+"\"%").Order("created desc").Find(&notes)
 		return notes, result.Error
 	}
 }

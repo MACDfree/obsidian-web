@@ -5,7 +5,7 @@
 <ul class="note-list">
     {{range .list}}
     <li>
-        <span>{{DateStr .Updated}}</span>
+        <span>{{date "2006-01-02" .Created}}</span>
         <a href="/note/{{.FullTitle}}">{{- if .Publish -}}🌐{{- end -}}{{.FullTitle}}</a>
     </li>
     {{end}}
