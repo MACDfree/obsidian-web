@@ -6,7 +6,12 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/re
 RUN apk add --no-cache build-base upx
 
 RUN go env -w GOPROXY="https://goproxy.cn,direct"
-ENV CGO_ENABLED 1
+ENV CGO_ENABLED=1
+
+# cache deps before building
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
 
 COPY . .
 RUN go build -ldflags="-s -w"
@@ -26,5 +31,5 @@ WORKDIR /app
 
 COPY --from=builder /build/obsidian-web /app/obsidian-web
 
-ENV GIN_MODE release
+ENV GIN_MODE=release
 ENTRYPOINT ["./obsidian-web"]
