@@ -4,7 +4,7 @@
 <article class="post">
     <header class="post-header">
         <h1 class="post-title">{{.info.Title}}</h1>
-        <div class="post-meta"><span class="created">创建时间：{{- date "2006-01-02" .Created -}}</span><span class="updated">更新时间：{{- date "2006-01-02" .Updated -}}</span></div>
+        <div class="post-meta"><span class="created">创建时间：{{- date "2006-01-02" .info.Created -}}</span><span class="updated">更新时间：{{- date "2006-01-02" .info.Updated -}}</span></div>
     </header>
     <div class="post-content">
         {{.content}}
