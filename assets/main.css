@@ -94,6 +94,26 @@ main.content {
 
 .content > article {
   word-break: break-all;
+  line-height: 1.5;
+}
+
+.content > article .post-header {
+  margin-bottom: 20px;
+}
+
+.content > article .post-title {
+  margin: 0;
+  font-size: 27px;
+  font-weight: 400;
+}
+
+.content > article .post-meta {
+  font-size: 14px;
+  color: #8a8a8a;
+}
+
+.content > article .post-meta .updated {
+  margin-left: 10px;
 }
 
 .content > article img {
@@ -136,6 +156,20 @@ main.content {
 
 .content > article tr:hover {
   background-color: #ddd;
+}
+
+.content > article .post-footer {
+  margin-top: 30px;
+  border-top: 1px solid #e6e6e6;
+}
+
+.content > article .post-footer .post-tags {
+  padding: 15px 0;
+}
+
+.content > article .post-footer .post-tags a {
+  margin-right: 5px;
+  word-break: break-all;
 }
 
 ul.note-list > li {
