@@ -23,6 +23,8 @@ import (
 var markdown goldmark.Markdown
 var markdownWithMathJax goldmark.Markdown
 
+// var cssStr = bytes.NewBuffer([]byte{})
+
 func init() {
 	sync.OnceFunc(func() {
 		markdown = goldmark.New(
@@ -35,9 +37,13 @@ func init() {
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("monokai"),
 					highlighting.WithFormatOptions(
+						chromahtml.ClassPrefix(""),
+						chromahtml.WithClasses(true),
 						chromahtml.WithLineNumbers(true),
+						chromahtml.LineNumbersInTable(true),
 						chromahtml.TabWidth(4),
 					),
+					// highlighting.WithCSSWriter(cssStr),
 				),
 			),
 			goldmark.WithParserOptions(
@@ -175,5 +181,6 @@ func ConvertToHTML(src []byte, withMathJax bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	// logger.Info(cssStr.String())
 	return htmlBuf.String(), nil
 }
