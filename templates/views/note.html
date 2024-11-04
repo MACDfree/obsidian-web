@@ -1,5 +1,28 @@
 {{ template "base.html" . }}
 
+{{ define "head"}}
+<title>{{ .info.Title }} | {{ .Site.Title }}</title>
+
+<meta name="description" content="{{ .info.Title }}">
+<meta name="author" content="macd">
+<meta name="keywords" content="{{join ", " .info.Tags}}">
+<meta property="og:title" content="{{ .info.Title }}">
+<meta property="og:description" content="{{ .info.Title }}">
+<meta property="og:type" content="article">
+<meta property="og:url" content="/note/{{ .info.FullTitle }}">
+<meta property="article:published_time" content="{{date "2006-01-02T15:04:05Z07:00" .info.Created }}">
+<meta property="article:modified_time" content="{{date "2006-01-02T15:04:05Z07:00" .info.Updated }}">
+<meta itemprop="name" content="{{ .info.Title }}">
+<meta itemprop="description" content="{{ .info.Title }}">
+<meta itemprop="datePublished" content="{{date "2006-01-02T15:04:05Z07:00" .info.Created }}">
+<meta itemprop="dateModified" content="{{date "2006-01-02T15:04:05Z07:00" .info.Updated }}">
+<meta itemprop="keywords" content="{{join ", " .info.Tags}}">
+
+{{- if .ExtInfo.mathjax -}}
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+{{- end -}}
+{{ end }}
+
 {{ define "content" }}
 <article class="post">
     <header class="post-header">
