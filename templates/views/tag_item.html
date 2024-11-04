@@ -1,5 +1,9 @@
 {{ template "base.html" . }}
 
+{{ define "head"}}
+<title>{{.tag}} | {{ .Site.Title }}</title>
+{{ end }}
+
 {{ define "content" }}
 <h2>{{.tag}}</h2>
 <ul class="note-list">

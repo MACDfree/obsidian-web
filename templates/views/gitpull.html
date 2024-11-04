@@ -1,5 +1,9 @@
 {{ template "base.html" . }}
 
+{{ define "head"}}
+<title>同步 | {{ .Site.Title }}</title>
+{{ end }}
+
 {{ define "content" }}
 <button type="button" onclick="gitpull()">git pull</button>
 <pre id="out"></pre>

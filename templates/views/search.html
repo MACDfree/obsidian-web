@@ -1,5 +1,9 @@
 {{ template "base.html" . }}
 
+{{ define "head"}}
+<title>搜索 | {{ .Site.Title }}</title>
+{{ end }}
+
 {{ define "content" }}
 <div class="search">
     <form action="/search" method="get">

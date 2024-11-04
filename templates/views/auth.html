@@ -1,5 +1,9 @@
 {{ template "base.html" . }}
 
+{{ define "head"}}
+<title>登录 | {{ .Site.Title }}</title>
+{{ end }}
+
 {{ define "content" }}
 <form action="/auth" method="post">
     <label for="password">密码</label>
