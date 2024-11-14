@@ -5,7 +5,7 @@
     {{- range .list -}}
     <li>
         <span>{{- date "2006-01-02" .Created -}}</span>
-        {{- if .Publish -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+        {{- if and .Publish $.Auth.IsLogin -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
         <span class="tags">
             {{- range .Tags -}}
             <a href="/tag/{{.}}">#{{.}}</a>
