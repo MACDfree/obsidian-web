@@ -44,6 +44,19 @@ func init() {
 						chromahtml.TabWidth(4),
 					),
 					// highlighting.WithCSSWriter(cssStr),
+					highlighting.WithWrapperRenderer(func(w util.BufWriter, context highlighting.CodeBlockContext, entering bool) {
+						if entering {
+							if lang, ok := context.Language(); ok {
+								w.WriteString(`<div class="highlight language-`)
+								w.Write(lang)
+								w.WriteString(`">`)
+							} else {
+								w.WriteString(`<div class="highlight language-plaintext">`)
+							}
+						} else {
+							w.WriteString("</div>")
+						}
+					}),
 				),
 			),
 			goldmark.WithParserOptions(
