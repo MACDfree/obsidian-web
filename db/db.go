@@ -28,11 +28,11 @@ func init() {
 	newLogger := gormlogger.New(
 		log.New(out, "\r\n", log.LstdFlags), // io writer
 		gormlogger.Config{
-			SlowThreshold:             time.Second,       // Slow SQL threshold
-			LogLevel:                  gormlogger.Silent, // Log level
-			IgnoreRecordNotFoundError: true,              // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,              // Don't include params in the SQL log
-			Colorful:                  false,             // Disable color
+			SlowThreshold:             time.Second,     // Slow SQL threshold
+			LogLevel:                  gormlogger.Info, // Log level
+			IgnoreRecordNotFoundError: true,            // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,            // Don't include params in the SQL log
+			Colorful:                  false,           // Disable color
 		},
 	)
 
