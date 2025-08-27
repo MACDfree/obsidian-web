@@ -182,6 +182,10 @@ main.content {
   word-break: break-all;
 }
 
+.post-content .highlight {
+  margin: 1em 0;
+}
+
 ul.note-list > li {
   margin-bottom: 5px;
 }
