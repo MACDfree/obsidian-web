@@ -38,12 +38,22 @@ func init() {
 
 	var err error
 	// db, err = gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
-	db, err = gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
+	db, err = gorm.Open(sqlite.Open("tmp.db"), &gorm.Config{
 		Logger: newLogger,
 	})
 	if err != nil {
 		panic("failed to connect database")
 	}
+
+	// 启用 WAL 模式
+	err = db.Exec("PRAGMA journal_mode=WAL;").Error
+	if err != nil {
+		panic("failed to set wal mode")
+	}
+
+	// 还可以设置其他并发相关参数
+	// db.Exec("PRAGMA busy_timeout=5000;")  // 5秒超时
+	// db.Exec("PRAGMA synchronous=NORMAL;") // 平衡性能和安全性
 
 	// 迁移 schema
 	db.AutoMigrate(&Note{}, &AttachInfo{})
