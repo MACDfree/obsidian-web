@@ -2,3 +2,5 @@ obsidian-web*
 *.db
 *.log
 logs/
+*.db-shm
+*.db-wal
