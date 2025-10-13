@@ -169,7 +169,7 @@ type CTime struct {
 	time.Time
 }
 
-func (cTime CTime) MarshalYAML() (interface{}, error) {
+func (cTime CTime) MarshalYAML() (any, error) {
 	return yaml.Node{
 		Kind:  yaml.ScalarNode,
 		Style: yaml.TaggedStyle,
