@@ -1,0 +1,41 @@
+name: Docker Build and Push
+
+on:
+  push:
+    tags:
+      - 'v*'
+#on: [push]
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: http://192.168.2.21:3000/macd/checkout@v4
+
+      # - name: Set up Docker Buildx
+      #   uses: http://192.168.2.21:3000/macd/setup-buildx-action@v3
+
+      - name: Login to Gitea Container Registry
+        uses: http://192.168.2.21:3000/macd/login-action@v3
+        with:
+          registry: ${{ vars.DOCKER_REGISTRY }}
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: http://192.168.2.21:3000/macd/metadata-action@v5
+        with:
+          images: ${{ vars.DOCKER_REGISTRY }}/${{ github.repository }}
+          tags: |
+            type=ref,event=tag
+            type=raw,value=latest
+
+      - name: Build and push
+        uses: http://192.168.2.21:3000/macd/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
