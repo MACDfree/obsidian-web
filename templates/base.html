@@ -56,6 +56,142 @@
         </footer>
     </div>
 
+    <!-- 图片查看器 -->
+    <div id="image-viewer" class="image-viewer">
+        <div class="image-viewer-content">
+            <span class="image-viewer-close">&times;</span>
+            <img id="viewer-image" class="viewer-image" src="" alt="放大图片">
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取图片查看器元素
+            const imageViewer = document.getElementById('image-viewer');
+            const viewerImage = document.getElementById('viewer-image');
+            const closeBtn = document.querySelector('.image-viewer-close');
+            
+            // 为所有图片添加点击事件
+            function addImageClickListeners() {
+                const images = document.querySelectorAll('img');
+                images.forEach(img => {
+                    // 避免重复添加事件
+                    if (!img.hasAttribute('data-image-viewer')) {
+                        img.setAttribute('data-image-viewer', 'true');
+                        img.addEventListener('click', function(e) {
+                            // 阻止事件冒泡，避免触发其他点击事件
+                            e.stopPropagation();
+                            
+                            // 设置查看器图片源
+                            viewerImage.src = this.src;
+                            
+                            // 显示查看器
+                            imageViewer.style.display = 'flex';
+                            
+                            // 添加缩放初始化
+                            viewerImage.style.transform = 'scale(1)';
+                            viewerImage.style.transition = 'transform 0.3s ease';
+                            
+                            // 禁止页面滚动
+                            document.body.style.overflow = 'hidden';
+                        });
+                    }
+                });
+            }
+            
+            // 初始添加事件监听器
+            addImageClickListeners();
+            
+            // 监听DOM变化，为动态加载的图片添加事件
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.addedNodes.length > 0) {
+                        addImageClickListeners();
+                    }
+                });
+            });
+            
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+            
+            // 关闭查看器
+            function closeViewer() {
+                imageViewer.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+            
+            // 点击关闭按钮
+            closeBtn.addEventListener('click', closeViewer);
+            
+            // 点击查看器背景关闭
+            imageViewer.addEventListener('click', function(e) {
+                if (e.target === imageViewer) {
+                    closeViewer();
+                }
+            });
+            
+            // 按ESC键关闭
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && imageViewer.style.display === 'flex') {
+                    closeViewer();
+                }
+            });
+            
+            // 实现图片缩放
+            let scale = 1;
+            const scaleStep = 0.1;
+            const minScale = 0.1;
+            const maxScale = 5;
+            
+            viewerImage.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                
+                // 计算缩放方向
+                const delta = e.deltaY > 0 ? -scaleStep : scaleStep;
+                scale = Math.max(minScale, Math.min(maxScale, scale + delta));
+                
+                // 应用缩放
+                viewerImage.style.transform = `scale(${scale})`;
+            });
+            
+            // 支持触摸设备的缩放
+            let touchStartDistance = 0;
+            let touchStartScale = 1;
+            
+            viewerImage.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    touchStartDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    touchStartScale = scale;
+                }
+            });
+            
+            viewerImage.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const touchDistance = Math.hypot(
+                        touch2.clientX - touch1.clientX,
+                        touch2.clientY - touch1.clientY
+                    );
+                    
+                    const newScale = touchStartScale * (touchDistance / touchStartDistance);
+                    scale = Math.max(minScale, Math.min(maxScale, newScale));
+                    
+                    viewerImage.style.transform = `scale(${scale})`;
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>

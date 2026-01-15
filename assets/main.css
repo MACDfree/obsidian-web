@@ -528,3 +528,74 @@ footer > p {
 .chroma .gu {
   color: #75715e;
 }
+
+/* 图片查看器样式 */
+.image-viewer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.image-viewer-content {
+  position: relative;
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.image-viewer-close {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  color: white;
+  font-size: 40px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.image-viewer-close:hover {
+  color: #ccc;
+}
+
+.viewer-image {
+  max-width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  cursor: zoom-in;
+}
+
+/* 图片悬停效果，提示可点击 */
+img[data-image-viewer="true"] {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+img[data-image-viewer="true"]:hover {
+  transform: scale(1.02);
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .image-viewer-content {
+    max-width: 95%;
+    max-height: 95%;
+  }
+  
+  .image-viewer-close {
+    top: -30px;
+    right: -10px;
+    font-size: 30px;
+  }
+  
+  .viewer-image {
+    max-height: 70vh;
+  }
+}
