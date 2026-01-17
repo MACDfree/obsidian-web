@@ -4,23 +4,27 @@
 <ul class="note-list">
     {{- range .list -}}
     <li>
-        <span>{{- date "2006-01-02" .Created -}}</span>
-        {{- if and .Publish $.Auth.IsLogin -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
-        <span class="tags">
+        <div class="note-header">
+            <div class="note-title">
+                {{- if and .Publish $.Auth.IsLogin -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+            </div>
+            <div class="note-date">
+                {{- date "2006-01-02" .Created -}}
+            </div>
+        </div>
+        <div class="tags">
             {{- range .Tags -}}
             <a href="/tag/{{.}}">#{{.}}</a>
             {{- end -}}
-        </span>
+        </div>
     </li>
     {{- end -}}
 </ul>
-<nav>
+<nav class="pagination">
     {{- if eq .prePageIndex 0 -}}
     <a href="/">上一页</a>
-    &nbsp;&nbsp;
     {{- else if gt .prePageIndex 0 -}}
     <a href="/page/{{.prePageIndex}}">上一页</a>
-    &nbsp;&nbsp;
     {{- end -}}
     {{- if gt .nexPageIndex -1 -}}
     <a href="/page/{{.nexPageIndex}}">下一页</a>

@@ -14,34 +14,36 @@
 <body>
     <div class="container">
         <header class="header">
-            <div class="logowrap">
-                <a class="logo" href="/">{{ .Site.Title }}</a>
+            <div class="header-content">
+                <div class="logowrap">
+                    <a class="logo" href="/">{{ .Site.Title }}</a>
+                </div>
+                <nav class="site-navbar">
+                    <ul>
+                        <li>
+                            <a href="/" class="{{ if eq .CurrentPath "/" }}active{{ end }}">首页</a>
+                        </li>
+                        <li>
+                            <a href="/search" class="{{ if eq .CurrentPath "/search" }}active{{ end }}">查询</a>
+                        </li>
+                        <li>
+                            <a href="/tag" class="{{ if eq .CurrentPath "/tag" }}active{{ end }}">标签</a>
+                        </li>
+                        <!-- <li>
+                            <a href="/archive">归档</a>
+                        </li> -->
+                        {{- if not .Auth.IsLogin -}}
+                        <li>
+                            <a href="/auth" class="{{ if eq .CurrentPath "/auth" }}active{{ end }}">登录</a>
+                        </li>
+                        {{- else -}}
+                        <li>
+                            <a href="/gitpull" class="{{ if eq .CurrentPath "/gitpull" }}active{{ end }}">git pull</a>
+                        </li>
+                        {{- end -}}
+                    </ul>
+                </nav>
             </div>
-            <nav class="site-navbar">
-                <ul>
-                    <li>
-                        <a href="/">首页</a>
-                    </li>
-                    <li>
-                        <a href="/search">查询</a>
-                    </li>
-                    <li>
-                        <a href="/tag">标签</a>
-                    </li>
-                    <!-- <li>
-                        <a href="/archive">归档</a>
-                    </li> -->
-                    {{- if not .Auth.IsLogin -}}
-                    <li>
-                        <a href="/auth">登录</a>
-                    </li>
-                    {{- else -}}
-                    <li>
-                        <a href="/gitpull">git pull</a>
-                    </li>
-                    {{- end -}}
-                </ul>
-            </nav>
         </header>
 
         <main class="content">
@@ -107,6 +109,7 @@
                 mutations.forEach(function(mutation) {
                     if (mutation.addedNodes.length > 0) {
                         addImageClickListeners();
+                        addCopyButtons();
                     }
                 });
             });
@@ -189,6 +192,76 @@
                     viewerImage.style.transform = `scale(${scale})`;
                 }
             });
+            
+            // 为代码块添加复制按钮
+            function addCopyButtons() {
+                // 只选择顶层的chroma元素，避免嵌套导致重复添加
+                const codeBlocks = document.querySelectorAll('.content > article div.chroma');
+                codeBlocks.forEach(block => {
+                    // 避免重复添加按钮
+                    if (!block.parentNode.classList.contains('code-block-container')) {
+                        // 创建外层容器
+                        const container = document.createElement('div');
+                        container.className = 'code-block-container';
+                        
+                        // 将chroma元素移动到容器中
+                        block.parentNode.insertBefore(container, block);
+                        container.appendChild(block);
+                        
+                        // 创建复制按钮
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'code-copy-btn';
+                        copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> 复制';
+                        
+                        copyBtn.addEventListener('click', function() {
+                            // 获取代码内容，排除行号
+                            let codeContent = '';
+                            const table = block.querySelector('table.lntable');
+                            
+                            if (table) {
+                                // 如果是带有行号的代码块
+                                const rows = table.querySelectorAll('tr');
+                                rows.forEach(row => {
+                                    const codeCell = row.querySelector('td:last-child');
+                                    if (codeCell) {
+                                        // 提取代码行文本，排除行号
+                                        const codeLine = codeCell.textContent.trim();
+                                        codeContent += codeLine + '\n';
+                                    }
+                                });
+                            } else {
+                                // 如果是没有行号的代码块
+                                codeContent = block.textContent;
+                            }
+                            
+                            // 去除最后一个多余的换行符
+                            codeContent = codeContent.trimEnd();
+                            
+                            // 使用Clipboard API复制内容
+                            navigator.clipboard.writeText(codeContent).then(() => {
+                                // 显示复制成功状态
+                                const originalText = copyBtn.innerHTML;
+                                copyBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> 已复制';
+                                copyBtn.classList.add('copied');
+                                
+                                // 恢复原始状态
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = originalText;
+                                    copyBtn.classList.remove('copied');
+                                }, 2000);
+                            }).catch(err => {
+                                console.error('复制失败:', err);
+                            });
+                        });
+                        
+                        // 将复制按钮添加到容器中
+                        container.appendChild(copyBtn);
+                    }
+                });
+            }
+            
+            // 初始添加复制按钮
+            addCopyButtons();
         });
     </script>
 

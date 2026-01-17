@@ -25,6 +25,7 @@ func GitPullPage(ctx *gin.Context) {
 		"Site": gin.H{
 			"Title": config.Get().Title,
 		},
+		"CurrentPath": "/gitpull",
 	})
 }
 

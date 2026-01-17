@@ -49,6 +49,7 @@ func ListNotes(ctx *gin.Context) {
 		"Site": gin.H{
 			"Title": config.Get().Title,
 		},
+		"CurrentPath":  "/",
 		"list":         notes,
 		"nexPageIndex": nextPageIndex,
 		"prePageIndex": prePageIndex,
@@ -74,7 +75,8 @@ func ListTags(ctx *gin.Context) {
 			"Site": gin.H{
 				"Title": config.Get().Title,
 			},
-			"list": tagCounts,
+			"CurrentPath": "/tag",
+			"list":        tagCounts,
 		})
 	} else {
 		tag = strings.TrimPrefix(tag, "/")
@@ -92,8 +94,9 @@ func ListTags(ctx *gin.Context) {
 			"Site": gin.H{
 				"Title": config.Get().Title,
 			},
-			"tag":  tag,
-			"list": notes,
+			"CurrentPath": "/tag",
+			"tag":         tag,
+			"list":        notes,
 		})
 	}
 }
@@ -161,10 +164,11 @@ func NotePage(ctx *gin.Context) {
 		"Site": gin.H{
 			"Title": config.Get().Title,
 		},
-		"IsNote":  true,
-		"ExtInfo": note.ExtInfo,
-		"info":    note,
-		"content": template.HTML(htmlStr),
+		"CurrentPath": "/note",
+		"IsNote":      true,
+		"ExtInfo":     note.ExtInfo,
+		"info":        note,
+		"content":     template.HTML(htmlStr),
 	})
 }
 
@@ -181,6 +185,7 @@ func SearchNotes(ctx *gin.Context) {
 			"Site": gin.H{
 				"Title": config.Get().Title,
 			},
+			"CurrentPath": "/search",
 		})
 		return
 	}
@@ -230,6 +235,7 @@ func SearchNotes(ctx *gin.Context) {
 		"Site": gin.H{
 			"Title": config.Get().Title,
 		},
+		"CurrentPath":   "/search",
 		"SearchResults": results,
 	})
 }

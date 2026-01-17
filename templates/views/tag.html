@@ -5,11 +5,16 @@
 {{ end }}
 
 {{ define "content" }}
-<ul>
-    {{range .list}}
-    <li>
-        <a href="/tag/{{.Tag}}">{{.Tag}}({{.Count}})</a>
-    </li>
-    {{end}}
-</ul>
+<div class="tag-page">
+    <ul class="tag-list">
+        {{range .list}}
+        <li>
+            <a href="/tag/{{.Tag}}">
+                #{{.Tag}}
+                <span class="tag-count">{{.Count}}</span>
+            </a>
+        </li>
+        {{end}}
+    </ul>
+</div>
 {{ end }}

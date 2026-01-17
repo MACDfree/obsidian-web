@@ -5,13 +5,26 @@
 {{ end }}
 
 {{ define "content" }}
-<h2>{{.tag}}</h2>
-<ul class="note-list">
-    {{range .list}}
-    <li>
-        <span>{{date "2006-01-02" .Created}}</span>
-        <a href="/note/{{.FullTitle}}">{{- if .Publish -}}🌐{{- end -}}{{.FullTitle}}</a>
-    </li>
-    {{end}}
-</ul>
+<div class="tag-item-page">
+    <h2>#{{.tag}}</h2>
+    <ul class="note-list">
+        {{- range .list -}}
+        <li>
+            <div class="note-header">
+                <div class="note-title">
+                    {{- if and .Publish $.Auth.IsLogin -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+                </div>
+                <div class="note-date">
+                    {{- date "2006-01-02" .Created -}}
+                </div>
+            </div>
+            <div class="tags">
+                {{- range .Tags -}}
+                <a href="/tag/{{.}}">#{{.}}</a>
+                {{- end -}}
+            </div>
+        </li>
+        {{- end -}}
+    </ul>
+</div>
 {{ end }}

@@ -25,6 +25,7 @@ func AuthPage(ctx *gin.Context) {
 		"Site": gin.H{
 			"Title": config.Get().Title,
 		},
+		"CurrentPath": "/auth",
 	})
 }
 

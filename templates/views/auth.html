@@ -5,9 +5,13 @@
 {{ end }}
 
 {{ define "content" }}
-<form action="/auth" method="post">
-    <label for="password">密码</label>
-    <input type="password" name="password" id="password">
-    <button type="submit">登录</button>
-</form>
+<div class="auth-form">
+    <form action="/auth" method="post">
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" name="password" id="password" placeholder="请输入密码">
+        </div>
+        <button type="submit">登录</button>
+    </form>
+</div>
 {{ end }}
