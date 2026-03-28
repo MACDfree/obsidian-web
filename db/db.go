@@ -56,7 +56,7 @@ func init() {
 	// db.Exec("PRAGMA synchronous=NORMAL;") // 平衡性能和安全性
 
 	// 迁移 schema
-	db.AutoMigrate(&Note{}, &AttachInfo{})
+	db.AutoMigrate(&Note{}, &AttachInfo{}, &NoteAttachment{})
 }
 
 func DeleteAll() error {
@@ -165,11 +165,91 @@ type Note struct {
 
 type AttachInfo struct {
 	ID         uint   `gorm:"primaryKey"`
-	AttachName string `gorm:"unique"`
-	Path       string
+	AttachName string `gorm:"unique"` // 相对路径，如 "folder1/image.png"
+	Path       string // 完整文件系统路径
+}
+
+// NoteAttachment 记录笔记与附件的关联关系（多对多）
+type NoteAttachment struct {
+	ID         uint `gorm:"primaryKey"`
+	NoteID     uint `gorm:"index;not null"`
+	AttachID   uint `gorm:"index;not null"`
+	AttachName string
 }
 
 type TagCount struct {
 	Tag   string
 	Count int
+}
+
+// DeleteAllNoteAttachments 删除所有笔记-附件关联
+func DeleteAllNoteAttachments() error {
+	return db.Exec("DELETE FROM note_attachments").Error
+}
+
+// GetAttachInfoByName 根据附件名称查询附件（支持精确匹配和文件名匹配）
+func GetAttachInfoByName(name string) (*AttachInfo, error) {
+	attachInfo := &AttachInfo{}
+	// 先尝试精确匹配
+	result := db.Where("attach_name = ?", name).Take(attachInfo)
+	if result.Error == nil {
+		return attachInfo, nil
+	}
+	// 如果精确匹配失败，尝试文件名匹配
+	result = db.Where("attach_name LIKE ?", "%/"+name).Take(attachInfo)
+	if result.Error == nil {
+		return attachInfo, nil
+	}
+	// 最后尝试直接文件名匹配（无路径）
+	result = db.Where("attach_name = ?", name).Take(attachInfo)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+	return attachInfo, nil
+}
+
+// CreateNoteAttachment 创建笔记-附件关联
+func CreateNoteAttachment(noteID, attachID uint, attachName string) error {
+	// 检查是否已存在
+	var existing NoteAttachment
+	result := db.Where("note_id = ? AND attach_id = ?", noteID, attachID).Take(&existing)
+	if result.Error == nil {
+		return nil // 已存在，跳过
+	}
+
+	noteAttachment := &NoteAttachment{
+		NoteID:     noteID,
+		AttachID:   attachID,
+		AttachName: attachName,
+	}
+	return db.Create(noteAttachment).Error
+}
+
+// GetAttachPublishStatus 判断附件是否可公开访问
+// 返回值: isPublic (是否可公开), exists (附件是否存在)
+func GetAttachPublishStatus(attachName string) (isPublic bool, exists bool) {
+	// 查询附件是否存在
+	attachInfo, err := GetAttachInfoByName(attachName)
+	if err != nil {
+		return false, false // 附件不存在
+	}
+
+	// 查询所有引用此附件的笔记
+	var noteIDs []uint
+	db.Model(&NoteAttachment{}).
+		Where("attach_id = ?", attachInfo.ID).
+		Pluck("note_id", &noteIDs)
+
+	// 如果没有任何笔记引用此附件
+	if len(noteIDs) == 0 {
+		return false, true // 存在但不可公开（保守策略）
+	}
+
+	// 检查是否有任意公开笔记引用
+	var publicCount int64
+	db.Model(&Note{}).
+		Where("id IN ? AND publish = ?", noteIDs, true).
+		Count(&publicCount)
+
+	return publicCount > 0, true
 }

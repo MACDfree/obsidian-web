@@ -8,7 +8,6 @@ import (
 	"obsidian-web/logger"
 	"obsidian-web/mdparser"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -108,8 +107,21 @@ func NotePage(ctx *gin.Context) {
 	if strings.Contains(path, "/assets/") {
 		// 兼容思源导出的附件情况
 		// 去对应路径下找附件并返回
-		assetPath := filepath.Join(config.Get().NotePath, path)
-		ctx.File(assetPath)
+
+		// 检查路径遍历攻击
+		if strings.Contains(path, "..") {
+			ctx.Status(400)
+			return
+		}
+
+		// 安全连接路径，确保在 NotePath 目录内
+		safePath, ok := safeJoin(config.Get().NotePath, path)
+		if !ok {
+			ctx.Status(400)
+			return
+		}
+
+		ctx.File(safePath)
 		return
 	}
 	note, err := db.GetNoteByPath(path)

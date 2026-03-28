@@ -10,6 +10,7 @@ import (
 	"obsidian-web/logger"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,6 +18,13 @@ import (
 	"github.com/samber/lo"
 	"gopkg.in/yaml.v3"
 )
+
+// attachmentExtensions 支持的附件扩展名
+var attachmentExtensions = []string{
+	".png", ".jpg", ".jpeg", ".gif", ".bmp", ".svg", // 图片
+	".pdf", ".zip", ".doc", ".docx", ".xls", ".xlsx", // 文档
+	".mp3", ".mp4", ".wav", ".webm", // 音视频
+}
 
 func Load() {
 	loadNoteBook()
@@ -29,9 +37,23 @@ func loadNoteBook() {
 		logger.Error(errors.WithStack(err))
 		return
 	}
+	err = db.DeleteAllNoteAttachments()
+	if err != nil {
+		logger.Error(errors.WithStack(err))
+		return
+	}
+
 	rootPath := config.Get().NotePath
 	ignorePaths := config.Get().IgnorePaths
 	attachPath := config.Get().AttachmentPath
+
+	// 用于保存笔记信息和附件引用
+	type noteWithRefs struct {
+		note *db.Note
+		refs []string
+	}
+	var notesWithRefs []noteWithRefs
+
 	err = filepath.WalkDir(rootPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
 			return err
@@ -86,15 +108,28 @@ func loadNoteBook() {
 			}
 			note.MD5 = md
 
+			// 读取完整内容并提取附件引用
+			content, err := os.ReadFile(path)
+			if err != nil {
+				logger.Error(errors.WithStack(err))
+				return nil
+			}
+			refs := extractAttachmentRefs(content)
+
 			err = db.InsertNote(note)
 			if err != nil {
 				logger.Error(errors.WithStack(err))
+			} else {
+				// 只在插入成功后保存引用信息
+				notesWithRefs = append(notesWithRefs, noteWithRefs{note: note, refs: refs})
 			}
 		} else if strings.HasPrefix(path[len(rootPath)+1:], attachPath) {
 			// 处理附件元信息
+			// 计算相对路径（相对于 attachment_path）
+			relativePath := path[len(rootPath)+1+len(attachPath)+1:]
 			attachInfo := &db.AttachInfo{
 				Path:       path,
-				AttachName: filepath.Base(path),
+				AttachName: relativePath,
 			}
 			err := db.InsertAttachInfo(attachInfo)
 			if err != nil {
@@ -106,6 +141,22 @@ func loadNoteBook() {
 	if err != nil {
 		logger.Error(errors.WithStack(err))
 	}
+
+	// 建立笔记-附件关联
+	for _, nwr := range notesWithRefs {
+		for _, ref := range nwr.refs {
+			attachInfo, err := db.GetAttachInfoByName(ref)
+			if err != nil {
+				// 附件不存在，跳过（可能是外部链接或引用错误）
+				continue
+			}
+			err = db.CreateNoteAttachment(nwr.note.ID, attachInfo.ID, ref)
+			if err != nil {
+				logger.Error(errors.WithStack(err))
+			}
+		}
+	}
+
 	logger.Infof("init notebook cost: %v", time.Since(start))
 }
 
@@ -203,4 +254,49 @@ func fileMD5(filePath string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// extractAttachmentRefs 从 markdown 内容中提取所有附件引用
+func extractAttachmentRefs(content []byte) []string {
+	refs := make(map[string]bool) // 使用 map 去重
+
+	// 1. 提取 wikilink 格式: [[filename.ext]] 或 [[path/filename.ext]]
+	wikilinkRe := regexp.MustCompile(`\[\[([^\]|]+)(?:\|[^\]]+)?\]\]`)
+	for _, match := range wikilinkRe.FindAllSubmatch(content, -1) {
+		target := string(match[1])
+		// 判断是否为附件（根据扩展名）
+		for _, ext := range attachmentExtensions {
+			if strings.HasSuffix(strings.ToLower(target), ext) {
+				refs[target] = true
+				break
+			}
+		}
+	}
+
+	// 2. 提取 markdown 图片/链接: ![alt](path) 或 [text](path)
+	mdLinkRe := regexp.MustCompile(`!\[([^\]]*)\]\(([^)]+)\)|\[[^\]]+\]\(([^)]+)\)`)
+	for _, match := range mdLinkRe.FindAllSubmatch(content, -1) {
+		// match[2] 是图片路径，match[3] 是链接路径
+		target := string(match[2])
+		if target == "" {
+			target = string(match[3])
+		}
+		if target == "" {
+			continue
+		}
+		// 处理路径，提取文件名或相对路径
+		for _, ext := range attachmentExtensions {
+			if strings.HasSuffix(strings.ToLower(target), ext) {
+				refs[target] = true
+				break
+			}
+		}
+	}
+
+	// 转换为 slice
+	result := make([]string, 0, len(refs))
+	for ref := range refs {
+		result = append(result, ref)
+	}
+	return result
 }
