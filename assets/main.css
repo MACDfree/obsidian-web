@@ -1,10 +1,10 @@
 @charset "UTF-8";
 
-/* CSS Variables for consistent theming */
+/* CSS Variables for consistent theming - 天空蓝配色 */
 :root {
-  --primary-color: #4f46e5;
-  --primary-hover: #4338ca;
-  --secondary-color: #06b6d4;
+  --primary-color: #0ea5e9;
+  --primary-hover: #0284c7;
+  --secondary-color: #38bdf8;
   --background-color: #f8fafc;
   --card-background: #ffffff;
   --text-primary: #1e293b;
@@ -469,7 +469,7 @@ input[type="text"]:focus,
 input[type="password"]:focus {
   outline: none;
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
   background-color: var(--card-background);
 }
 
@@ -505,7 +505,7 @@ button:active {
 
 button:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1), var(--shadow-md);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1), var(--shadow-md);
 }
 
 /* Form layout variations */
@@ -636,7 +636,7 @@ button:focus {
 
 .search .result .item:hover {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .search .result .item:last-child {
