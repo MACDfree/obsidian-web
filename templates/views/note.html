@@ -40,4 +40,19 @@
         </div>
     </footer>
 </article>
+{{- if .Backlinks -}}
+<section class="backlinks">
+    <h3 class="backlinks-title">反向链接</h3>
+    <ul class="backlinks-list">
+        {{- range .Backlinks -}}
+        <li class="backlink-item">
+            <a href="/note/{{.FullTitle}}" class="backlink-link">
+                <span class="backlink-title">{{.Title}}</span>
+                <span class="backlink-date">{{date "2006-01-02" .Updated}}</span>
+            </a>
+        </li>
+        {{- end -}}
+    </ul>
+</section>
+{{- end -}}
 {{ end }}

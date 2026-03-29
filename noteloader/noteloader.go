@@ -42,6 +42,11 @@ func loadNoteBook() {
 		logger.Error(errors.WithStack(err))
 		return
 	}
+	err = db.DeleteAllNoteLinks()
+	if err != nil {
+		logger.Error(errors.WithStack(err))
+		return
+	}
 
 	rootPath := config.Get().NotePath
 	ignorePaths := config.Get().IgnorePaths
@@ -49,10 +54,17 @@ func loadNoteBook() {
 
 	// 用于保存笔记信息和附件引用
 	type noteWithRefs struct {
-		note *db.Note
-		refs []string
+		note      *db.Note
+		refs      []string
+		content   []byte // 保存内容用于后续提取笔记链接
 	}
 	var notesWithRefs []noteWithRefs
+
+	// 笔记查找表：用于解析 wikilink 目标
+	// key: FullTitle -> NoteID
+	// key: "title:"+Title -> NoteID
+	// key: "alias:"+Alias -> NoteID
+	noteLookup := make(map[string]uint)
 
 	err = filepath.WalkDir(rootPath, func(path string, d os.DirEntry, err error) error {
 		if err != nil {
@@ -120,8 +132,14 @@ func loadNoteBook() {
 			if err != nil {
 				logger.Error(errors.WithStack(err))
 			} else {
-				// 只在插入成功后保存引用信息
-				notesWithRefs = append(notesWithRefs, noteWithRefs{note: note, refs: refs})
+				// 只在插入成功后保存引用信息和内容
+				notesWithRefs = append(notesWithRefs, noteWithRefs{note: note, refs: refs, content: content})
+				// 构建查找表
+				noteLookup[note.FullTitle] = note.ID
+				noteLookup["title:"+note.Title] = note.ID
+				for _, alias := range note.Aliases {
+					noteLookup["alias:"+alias] = note.ID
+				}
 			}
 		} else if strings.HasPrefix(path[len(rootPath)+1:], attachPath) {
 			// 处理附件元信息
@@ -151,6 +169,17 @@ func loadNoteBook() {
 				continue
 			}
 			err = db.CreateNoteAttachment(nwr.note.ID, attachInfo.ID, ref)
+			if err != nil {
+				logger.Error(errors.WithStack(err))
+			}
+		}
+	}
+
+	// 建立笔记链接关系
+	for _, nwr := range notesWithRefs {
+		noteLinks := extractNoteLinks(nwr.content, noteLookup)
+		for _, targetNoteID := range noteLinks {
+			err = db.CreateNoteLink(nwr.note.ID, targetNoteID)
 			if err != nil {
 				logger.Error(errors.WithStack(err))
 			}
@@ -254,6 +283,64 @@ func fileMD5(filePath string) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// extractNoteLinks 从 markdown 内容中提取所有笔记链接（非附件）
+// 返回目标笔记 ID 列表（已去重）
+func extractNoteLinks(content []byte, noteLookup map[string]uint) []uint {
+	links := make(map[uint]bool) // 使用 map 去重
+
+	// 提取 wikilink 格式: [[noteName]] 或 [[noteName|显示文本]] 或 [[noteName#heading]]
+	wikilinkRe := regexp.MustCompile(`\[\[([^\]|#]+)(?:[|#][^\]]+)?\]\]`)
+	for _, match := range wikilinkRe.FindAllSubmatch(content, -1) {
+		target := strings.TrimSpace(string(match[1]))
+
+		// 排除附件链接（根据扩展名判断）
+		if isAttachmentLink(target) {
+			continue
+		}
+
+		// 解析笔记目标
+		noteID := resolveNoteTarget(target, noteLookup)
+		if noteID > 0 {
+			links[noteID] = true
+		}
+	}
+
+	// 转换为 slice
+	result := make([]uint, 0, len(links))
+	for noteID := range links {
+		result = append(result, noteID)
+	}
+	return result
+}
+
+// isAttachmentLink 判断是否为附件链接
+func isAttachmentLink(target string) bool {
+	for _, ext := range attachmentExtensions {
+		if strings.HasSuffix(strings.ToLower(target), ext) {
+			return true
+		}
+	}
+	return false
+}
+
+// resolveNoteTarget 解析笔记目标，返回笔记ID
+// 支持通过 FullTitle、Title、Aliases 匹配
+func resolveNoteTarget(target string, noteLookup map[string]uint) uint {
+	// 1. 精确匹配 FullTitle
+	if id, ok := noteLookup[target]; ok {
+		return id
+	}
+	// 2. 匹配 Title（不含路径）
+	if id, ok := noteLookup["title:"+target]; ok {
+		return id
+	}
+	// 3. 匹配 Alias
+	if id, ok := noteLookup["alias:"+target]; ok {
+		return id
+	}
+	return 0
 }
 
 // extractAttachmentRefs 从 markdown 内容中提取所有附件引用

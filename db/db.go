@@ -56,7 +56,7 @@ func init() {
 	// db.Exec("PRAGMA synchronous=NORMAL;") // 平衡性能和安全性
 
 	// 迁移 schema
-	db.AutoMigrate(&Note{}, &AttachInfo{}, &NoteAttachment{})
+	db.AutoMigrate(&Note{}, &AttachInfo{}, &NoteAttachment{}, &NoteLink{})
 }
 
 func DeleteAll() error {
@@ -177,6 +177,21 @@ type NoteAttachment struct {
 	AttachName string
 }
 
+// NoteLink 记录笔记之间的链接关系
+type NoteLink struct {
+	ID           uint `gorm:"primaryKey"`
+	SourceNoteID uint `gorm:"index;not null"` // 源笔记（包含链接的笔记）
+	TargetNoteID uint `gorm:"index;not null"` // 目标笔记（被链接的笔记）
+}
+
+// BacklinkInfo 反向链接信息
+type BacklinkInfo struct {
+	ID        uint      `json:"id"`
+	Title     string    `json:"title"`
+	FullTitle string    `json:"full_title"`
+	Updated   time.Time `json:"updated"`
+}
+
 type TagCount struct {
 	Tag   string
 	Count int
@@ -252,4 +267,44 @@ func GetAttachPublishStatus(attachName string) (isPublic bool, exists bool) {
 		Count(&publicCount)
 
 	return publicCount > 0, true
+}
+
+// DeleteAllNoteLinks 删除所有笔记链接关系
+func DeleteAllNoteLinks() error {
+	return db.Exec("DELETE FROM note_links").Error
+}
+
+// CreateNoteLink 创建笔记链接关系
+func CreateNoteLink(sourceNoteID, targetNoteID uint) error {
+	// 检查是否已存在
+	var existing NoteLink
+	result := db.Where("source_note_id = ? AND target_note_id = ?", sourceNoteID, targetNoteID).Take(&existing)
+	if result.Error == nil {
+		return nil // 已存在，跳过
+	}
+
+	noteLink := &NoteLink{
+		SourceNoteID: sourceNoteID,
+		TargetNoteID: targetNoteID,
+	}
+	return db.Create(noteLink).Error
+}
+
+// GetBacklinks 获取指向指定笔记的所有反向链接
+func GetBacklinks(noteID uint, isLogin bool) ([]BacklinkInfo, error) {
+	var results []BacklinkInfo
+
+	query := db.Table("note_links").
+		Select("notes.id, notes.title, notes.full_title, notes.updated").
+		Joins("JOIN notes ON notes.id = note_links.source_note_id").
+		Where("note_links.target_note_id = ?", noteID)
+
+	if !isLogin {
+		query = query.Where("notes.publish = ?", true)
+	}
+
+	query = query.Order("notes.updated desc")
+
+	err := query.Scan(&results).Error
+	return results, err
 }

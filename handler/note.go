@@ -169,6 +169,14 @@ func NotePage(ctx *gin.Context) {
 	}
 
 	ctx.Header("ETag", "\""+note.MD5+isLoginStr+"\"")
+
+	// 获取反向链接
+	backlinks, err := db.GetBacklinks(note.ID, isLogin)
+	if err != nil {
+		logger.Error(errors.WithStack(err))
+		backlinks = []db.BacklinkInfo{}
+	}
+
 	ctx.HTML(200, "note.html", gin.H{
 		"Auth": gin.H{
 			"IsLogin": isLogin,
@@ -181,6 +189,7 @@ func NotePage(ctx *gin.Context) {
 		"ExtInfo":     note.ExtInfo,
 		"info":        note,
 		"content":     template.HTML(htmlStr),
+		"Backlinks":   backlinks,
 	})
 }
 
