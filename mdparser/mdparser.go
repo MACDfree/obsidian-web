@@ -36,6 +36,7 @@ func init() {
 				},
 				highlighting.NewHighlighting(
 					highlighting.WithStyle("monokai"),
+					highlighting.WithGuessLanguage(true),
 					highlighting.WithFormatOptions(
 						chromahtml.ClassPrefix(""),
 						chromahtml.WithClasses(true),

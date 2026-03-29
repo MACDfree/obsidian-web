@@ -195,7 +195,7 @@
             
             // 为代码块添加复制按钮
             function addCopyButtons() {
-                // 只选择顶层的chroma元素，避免嵌套导致重复添加
+                // 选择顶层的chroma元素（现在所有代码块都有chroma）
                 const codeBlocks = document.querySelectorAll('.content > article div.chroma');
                 codeBlocks.forEach(block => {
                     // 避免重复添加按钮
@@ -203,8 +203,8 @@
                         // 创建外层容器
                         const container = document.createElement('div');
                         container.className = 'code-block-container';
-                        
-                        // 将chroma元素移动到容器中
+
+                        // 将代码块元素移动到容器中
                         block.parentNode.insertBefore(container, block);
                         container.appendChild(block);
                         
