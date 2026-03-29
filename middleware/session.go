@@ -1,27 +1,22 @@
 package middleware
 
 import (
-	"obsidian-web/logger"
-	"os"
+	"crypto/rand"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/memstore"
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	authKey = os.Getenv("key1")
-	encKey  = os.Getenv("key2")
-)
+func generateKey() []byte {
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		panic(err)
+	}
+	return key
+}
 
 func Session(name string) gin.HandlerFunc {
-	// authKey = "12345678901234561234567890123456"
-	// encKey = "12345678901234561234567890123456"
-
-	if authKey == "" || encKey == "" {
-		logger.Fatalf("authKey or encKey is empty")
-	}
-	logger.Infof("key1: %s\tkey2: %s", authKey, encKey)
-	store := memstore.NewStore([]byte(authKey), []byte(encKey))
+	store := memstore.NewStore(generateKey(), generateKey())
 	return sessions.Sessions(name, store)
 }
