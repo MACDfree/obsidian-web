@@ -4,3 +4,4 @@ obsidian-web*
 logs/
 *.db-shm
 *.db-wal
+data/

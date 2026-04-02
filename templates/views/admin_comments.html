@@ -1,0 +1,69 @@
+{{ template "base.html" . }}
+
+{{ define "head"}}
+<title>评论管理 | {{ .Site.Title }}</title>
+{{ end }}
+
+{{ define "content" }}
+<div class="admin-comments">
+    <h2>评论管理 <span class="comment-count">共 {{ .Total }} 条</span></h2>
+
+    {{- if .Comments -}}
+    <div class="admin-comment-list">
+        {{- range .Comments -}}
+        <div class="admin-comment-item {{ if eq .Status 2 }}comment-hidden{{ end }}">
+            <div class="admin-comment-meta">
+                <span class="admin-comment-author">{{ .Nickname }}</span>
+                <span class="admin-comment-ip">{{ .IP }}</span>
+                <span class="admin-comment-time">{{ date "2006-01-02 15:04" .CreatedAt }}</span>
+                {{- if eq .Status 2 -}}
+                <span class="admin-comment-status status-hidden">已隐藏</span>
+                {{- else -}}
+                <span class="admin-comment-status status-normal">正常</span>
+                {{- end -}}
+            </div>
+            <div class="admin-comment-note">
+                <a href="/note/{{ .NoteFullTitle }}">{{ .NoteFullTitle }}</a>
+            </div>
+            <div class="admin-comment-content">{{ .Content }}</div>
+            <div class="admin-comment-actions">
+                {{- if ne .Status 2 -}}
+                <button class="admin-delete-btn" data-id="{{ .ID }}">删除</button>
+                {{- end -}}
+            </div>
+        </div>
+        {{- end -}}
+    </div>
+
+    <div class="pagination">
+        {{- if gt $.PageIndex 0 -}}
+        <a href="/admin/comments?page={{ .PrePageIndex }}" class="pagination-btn">上一页</a>
+        {{- end -}}
+        {{- if gt $.NexPageIndex 0 -}}
+        <a href="/admin/comments?page={{ .NexPageIndex }}" class="pagination-btn">下一页</a>
+        {{- end -}}
+    </div>
+    {{- else -}}
+    <p class="no-comments">暂无评论</p>
+    {{- end -}}
+</div>
+
+<script>
+document.querySelectorAll('.admin-delete-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        if (!confirm('确定要删除这条评论吗？')) return;
+        var id = this.getAttribute('data-id');
+        fetch('/api/comments/' + id + '/delete', { method: 'POST' })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.code === 0) {
+                    location.reload();
+                } else {
+                    alert(data.msg);
+                }
+            })
+            .catch(function() { alert('操作失败'); });
+    });
+});
+</script>
+{{ end }}

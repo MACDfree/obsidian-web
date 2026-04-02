@@ -55,4 +55,157 @@
     </ul>
 </section>
 {{- end -}}
+
+{{- if .info.Publish -}}
+<section class="comments-section">
+    <h3 class="comments-title">评论</h3>
+    <div id="comments-list" data-note="{{.info.FullTitle}}"></div>
+    <form id="comment-form" class="comment-form">
+        <input type="hidden" id="comment-note" value="{{.info.FullTitle}}">
+        <input type="hidden" id="comment-parent" value="">
+        <div id="reply-indicator" class="reply-indicator" style="display:none;">
+            <span id="reply-to-text"></span>
+            <button type="button" id="cancel-reply" class="cancel-reply-btn">取消回复</button>
+        </div>
+        <div class="comment-form-fields">
+            <input type="text" id="comment-nickname" placeholder="昵称" required maxlength="50" class="comment-input">
+            <textarea id="comment-content" placeholder="写评论..." required maxlength="2000" class="comment-textarea"></textarea>
+            <button type="submit" class="comment-submit-btn">发表评论</button>
+        </div>
+    </form>
+</section>
+<script>
+(function() {
+    var noteFullTitle = document.getElementById('comment-note').value;
+    var commentsList = document.getElementById('comments-list');
+    var form = document.getElementById('comment-form');
+    var parentInput = document.getElementById('comment-parent');
+    var replyIndicator = document.getElementById('reply-indicator');
+    var replyToText = document.getElementById('reply-to-text');
+
+    function timeAgo(date) {
+        var now = new Date();
+        var d = new Date(date);
+        var diff = Math.floor((now - d) / 1000);
+        if (diff < 60) return '刚刚';
+        if (diff < 3600) return Math.floor(diff / 60) + ' 分钟前';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' 小时前';
+        if (diff < 2592000) return Math.floor(diff / 86400) + ' 天前';
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    function renderComment(c, isReply) {
+        var div = document.createElement('div');
+        div.className = isReply ? 'comment-item comment-reply' : 'comment-item';
+
+        var header = document.createElement('div');
+        header.className = 'comment-header';
+
+        var nick = document.createElement('span');
+        nick.className = 'comment-author';
+        nick.textContent = c.nickname;
+
+        var time = document.createElement('span');
+        time.className = 'comment-time';
+        time.textContent = timeAgo(c.created_at);
+
+        var replyBtn = document.createElement('button');
+        replyBtn.className = 'comment-reply-btn';
+        replyBtn.textContent = '回复';
+        replyBtn.addEventListener('click', function() {
+            parentInput.value = c.id;
+            replyToText.textContent = '回复 @' + c.nickname;
+            replyIndicator.style.display = 'flex';
+            document.getElementById('comment-content').focus();
+        });
+
+        header.appendChild(nick);
+        header.appendChild(time);
+        header.appendChild(replyBtn);
+
+        var body = document.createElement('div');
+        body.className = 'comment-body';
+        body.textContent = c.content;
+
+        div.appendChild(header);
+        div.appendChild(body);
+
+        if (c.replies && c.replies.length > 0) {
+            var repliesDiv = document.createElement('div');
+            repliesDiv.className = 'comment-replies';
+            c.replies.forEach(function(r) {
+                repliesDiv.appendChild(renderComment(r, true));
+            });
+            div.appendChild(repliesDiv);
+        }
+
+        return div;
+    }
+
+    function loadComments() {
+        fetch('/api/comments?note_full_title=' + encodeURIComponent(noteFullTitle))
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                commentsList.innerHTML = '';
+                if (data.code === 0 && data.data) {
+                    data.data.forEach(function(c) {
+                        commentsList.appendChild(renderComment(c, false));
+                    });
+                    var title = commentsList.closest('.comments-section').querySelector('.comments-title');
+                    title.textContent = '评论 (' + data.count + ')';
+                }
+            });
+    }
+
+    document.getElementById('cancel-reply').addEventListener('click', function() {
+        parentInput.value = '';
+        replyIndicator.style.display = 'none';
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var nickname = document.getElementById('comment-nickname').value.trim();
+        var content = document.getElementById('comment-content').value.trim();
+        if (!nickname || !content) return;
+
+        var parentId = parentInput.value ? parseInt(parentInput.value) : null;
+
+        var btn = form.querySelector('.comment-submit-btn');
+        btn.disabled = true;
+        btn.textContent = '提交中...';
+
+        fetch('/api/comments', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                note_full_title: noteFullTitle,
+                parent_id: parentId,
+                nickname: nickname,
+                content: content
+            })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.code === 0) {
+                document.getElementById('comment-content').value = '';
+                parentInput.value = '';
+                replyIndicator.style.display = 'none';
+                loadComments();
+            } else {
+                alert(data.msg);
+            }
+        })
+        .catch(function() {
+            alert('评论失败，请稍后再试');
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = '发表评论';
+        });
+    });
+
+    loadComments();
+})();
+</script>
+{{- end -}}
 {{ end }}

@@ -51,6 +51,12 @@ func NewRouter() *gin.Engine {
 	r.GET("/gitpull", handler.GitPullPage)
 	r.POST("/gitpull", handler.GitPull)
 
+	// 评论相关
+	r.GET("/api/comments", handler.ListComments)
+	r.POST("/api/comments", handler.CreateComment)
+	r.POST("/api/comments/:id/delete", handler.DeleteComment)
+	r.GET("/admin/comments", handler.AdminComments)
+
 	return r
 }
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"obsidian-web/config"
+	"obsidian-web/db"
 	"obsidian-web/job"
 	"obsidian-web/logger"
 	"obsidian-web/noteloader"
@@ -43,6 +44,8 @@ func main() {
 	}
 
 	noteloader.Load()
+
+	db.InitCommentDB()
 
 	r := server.NewRouter()
 
