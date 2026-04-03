@@ -1,15 +1,14 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"obsidian-web/config"
 	"obsidian-web/db"
+	"obsidian-web/gitutil"
 	"obsidian-web/job"
 	"obsidian-web/logger"
 	"obsidian-web/noteloader"
 	"obsidian-web/server"
-	"os/exec"
 
 	"github.com/pkg/errors"
 )
@@ -22,25 +21,19 @@ import (
 2. 实现一个web服务，提供笔记的访问和鉴权逻辑
 */
 
-// preScript用于执行启动前的一系列脚本
-var preScript = flag.String("pre", "", "pre script")
+// gitpull 控制启动时是否先拉取仓库
+var gitpull = flag.Bool("gitpull", false, "启动时先执行 git pull 拉取最新笔记")
 
 func main() {
 	flag.Parse()
-	if *preScript != "" {
-		logger.Infof("start pre script: %s", *preScript)
-		cmd := exec.Command("sh", "-c", *preScript)
-		cmd.Dir = ""
-		sout := bytes.NewBuffer(nil)
-		cmd.Stdout = sout
-		serr := bytes.NewBuffer(nil)
-		cmd.Stderr = serr
-		err := cmd.Run()
+
+	if *gitpull && gitutil.IsConfigured() {
+		logger.Info("启动时拉取仓库...")
+		result, err := gitutil.Pull()
 		if err != nil {
-			logger.Errorf("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
 			logger.Fatalf("%+v", errors.WithStack(err))
 		}
-		logger.Infof("pre script error: %s. pre script stdout: %s.", serr.String(), sout.String())
+		logger.Infof("拉取完成: %s", result.Msg)
 	}
 
 	noteloader.Load()

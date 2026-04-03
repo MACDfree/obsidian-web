@@ -5,6 +5,7 @@
 {{ end }}
 
 {{ define "content" }}
+<p style="color: #666; font-size: 0.9em;">{{ .GitStatus }}</p>
 <button type="button" onclick="gitpull()">git pull</button>
 <pre id="out"></pre>
 
@@ -14,9 +15,9 @@
         fetch("/gitpull", {
             method: "POST",
         }).then(res => res.json()).then(data => {
-            document.getElementById("out").innerText = data.msg+"\nout: "+data.sout+"err: "+data.serr;
+            document.getElementById("out").innerText = data.msg;
         }).catch(err => {
-            document.getElementById("out").innerText = data.msg+"\nout: "+data.sout+"err: "+data.serr;
+            document.getElementById("out").innerText = "请求失败: " + err.message;
         });
     }
 </script>

@@ -18,6 +18,8 @@ type Config struct {
 	Title          string   `yaml:"title"`
 	Password       string   `yaml:"password"`
 	BindAddr       string   `yaml:"bind_addr"`
+	GitURL         string   `yaml:"git_url"`
+	GitToken       string   `yaml:"git_token"`
 }
 
 var cfg Config
