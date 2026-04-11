@@ -5,3 +5,5 @@ logs/
 *.db-shm
 *.db-wal
 data/
+.claude/
+.DS_Store

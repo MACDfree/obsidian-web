@@ -12,7 +12,7 @@
         <li>
             <div class="note-header">
                 <div class="note-title">
-                    {{- if and .Publish $.Auth.IsLogin -}}🌐{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+                    {{- if and .Publish $.Auth.IsLogin -}}<span style="color: var(--primary); margin-right: 0.25rem;">🌐</span>{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
                 </div>
                 <div class="note-date">
                     {{- date "2006-01-02" .Created -}}
