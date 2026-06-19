@@ -1,63 +1,63 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+本文件为 Claude Code (claude.ai/code) 在本代码库工作时提供指导。
 
-## Project Overview
+## 项目概述
 
-obsidian-web is a Go web application that publishes an Obsidian vault as a browsable website. It supports both public and private (password-protected) notes. The primary use case is reading PC-created notes on mobile devices. The codebase uses Chinese for comments and UI text.
+obsidian-web 是一个将 Obsidian 笔记库发布为可浏览网站的 Go Web 应用。它支持公开和私有（密码保护）笔记。主要使用场景是在移动设备上阅读 PC 创建的笔记。代码库中的注释和 UI 文本使用中文。
 
-## Build & Run
+## 构建与运行
 
 ```bash
-go build                    # Produces ./obsidian-web binary
-go run main.go              # Run directly
-./obsidian-web -pre "git pull"  # Run with pre-startup script
+go build                    # 生成 ./obsidian-web 二进制文件
+go run main.go              # 直接运行
+./obsidian-web -pre "git pull"  # 运行前执行预启动脚本
 ```
 
-- Requires **CGO enabled** (uses `mattn/go-sqlite3`)
-- Config is loaded from `config.yml` in the working directory
-- No tests, Makefile, or linter configuration exists in this project
+- 需要**启用 CGO**（使用了 `mattn/go-sqlite3`）
+- 配置从工作目录的 `config.yml` 加载
+- 本项目没有测试、Makefile 或 linter 配置
 
-## Architecture
+## 架构
 
-**Startup flow** (`main.go` → `noteloader.Load()` → `server.NewRouter()` → `job.Start()` → `r.Run()`):
-1. Optional pre-script (e.g., `git pull` to sync vault)
-2. Vault scan: walks the Obsidian vault directory, parses YAML frontmatter from `.md` files, indexes notes/attachments/wikilinks into SQLite (`tmp.db`)
-3. Gin HTTP server with middleware chain
-4. Cron scheduler starts (daily git pull at 04:12)
+**启动流程** (`main.go` → `noteloader.Load()` → `server.NewRouter()` → `job.Start()` → `r.Run()`)：
+1. 可选的预启动脚本（例如 `git pull` 同步笔记库）
+2. 笔记库扫描：遍历 Obsidian 笔记库目录，解析 `.md` 文件的 YAML frontmatter，将笔记/附件/wikilink 索引到 SQLite (`tmp.db`)
+3. Gin HTTP 服务器及中间件链
+4. Cron 调度器启动（每天 04:12 执行 git 拉取）
 
-**Request flow**: Gin middleware chain is `logger → session → auth → error handler`. Auth middleware sets `isLogin` in context; handlers check note publish status to enforce access control.
+**请求流程**：Gin 中间件链为 `logger → session → auth → error handler`。Auth 中间件在 context 中设置 `isLogin`；处理器检查笔记的发布状态以实施访问控制。
 
-**Key packages**:
-- `config/` — Config singleton loaded from `config.yml` via `sync.Once`
-- `db/` — GORM models (`Note`, `AttachInfo`, `NoteAttachment`, `NoteLink`) and all database queries
-- `handler/` — Gin HTTP handlers for notes, attachments, auth, git pull, and static files
-- `mdparser/` — Goldmark markdown pipeline with wikilink resolution, syntax highlighting (Chroma/Monokai), MathJax, and custom image rendering
-- `noteloader/` — Vault scanner that parses frontmatter and builds the SQLite index
-- `server/` — Router setup, middleware registration, template loading
-- `middleware/` — Auth, session (in-memory `memstore`), logging, error pages
-- `job/` — Cron-based scheduled tasks
-- `logger/` — Zap structured logging with file rotation
+**核心包**：
+- `config/` — 配置单例，通过 `sync.Once` 从 `config.yml` 加载
+- `db/` — GORM 模型（`Note`、`AttachInfo`、`NoteAttachment`、`NoteLink`）及所有数据库查询
+- `handler/` — Gin HTTP 处理器，处理笔记、附件、认证、git 拉取和静态文件
+- `mdparser/` — Goldmark markdown 处理流程，支持 wikilink 解析、语法高亮（Chroma/Monokai）、MathJax 和自定义图片渲染
+- `noteloader/` — 笔记库扫描器，解析 frontmatter，构建 SQLite 索引
+- `server/` — 路由设置、中间件注册、模板加载
+- `middleware/` — 认证、会话（内存 `memstore`）、日志、错误页面
+- `job/` — Cron 定时任务
+- `logger/` — Zap 结构化日志，支持文件轮转
 
-**Access control**: Notes with `publish: true` in frontmatter are public; others require login. Attachments inherit the publish status of referencing notes.
+**访问控制**：frontmatter 中 `publish: true` 的笔记为公开笔记；其他需要登录。附件继承引用笔记的发布状态。
 
-**Markdown pipeline**: Goldmark with GFM, `[[wikilink]]` resolution (→ `/note/` or `/attachment/`), Chroma syntax highlighting, optional MathJax, YAML frontmatter extraction, and auto-prefixed image paths.
+**Markdown 处理流程**：Goldmark + GFM，`[[wikilink]]` 解析（→ `/note/` 或 `/attachment/`）、Chroma 语法高亮、可选 MathJax、YAML frontmatter 提取、纯文件名图片路径自动添加前缀。
 
-**Templates**: Go `html/template` with `multitemplate` for layout composition (`base.html` + view templates). Sprig functions and a `SafeHTML` helper are available.
+**模板**：Go `html/template`，使用 `multitemplate` 进行布局组合（`base.html` + 视图模板）。提供 Sprig 函数和 `SafeHTML` 辅助函数。
 
-## Configuration (`config.yml`)
+## 配置项（`config.yml`）
 
-- `note_path` — Absolute path to the Obsidian vault
-- `ignore_paths` — Directory names to skip during vault scan
-- `attachment_path` — Subdirectory name for attachments
-- `paginate` — Notes per page (default: 20)
-- `title` — Site title
-- `password` — Password for private notes (empty = no auth)
-- `bind_addr` — Server bind address (default: `127.0.0.1:8888`)
+- `note_path` — Obsidian 笔记库的绝对路径
+- `ignore_paths` — 扫描时跳过的目录名
+- `attachment_path` — 附件的子目录名
+- `paginate` — 每页笔记数（默认：20）
+- `title` — 网站标题
+- `password` — 私有笔记的密码（空 = 无需认证）
+- `bind_addr` — 服务器绑定地址（默认：`127.0.0.1:8888`）
 
-## Conventions
+## 约定
 
-- Commit messages follow conventional-commit style: `feat(scope):`, `fix(scope):`, `refactor:`, etc.
-- Session keys are randomly generated at startup (in-memory store, sessions lost on restart)
-- The Dockerfile uses multi-stage build with UPX compression, Chinese mirror repos, and Asia/Shanghai timezone
-- CI/CD is via Gitea Actions (`.gitea/workflows/`) — builds Docker image on tag push
+- 提交信息遵循 conventional-commit 风格：`feat(scope):`、`fix(scope):`、`refactor:` 等
+- Session 密钥在启动时随机生成（内存存储，重启后会话丢失）
+- Dockerfile 使用多阶段构建，启用 UPX 压缩，使用中国镜像源和 Asia/Shanghai 时区
+- CI/CD 通过 Gitea Actions（`.gitea/workflows/`）—— 在 tag 推送时构建 Docker 镜像
