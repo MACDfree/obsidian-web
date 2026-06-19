@@ -7,3 +7,4 @@ logs/
 data/
 .claude/
 .DS_Store
+.agents/
