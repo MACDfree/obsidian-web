@@ -6,7 +6,8 @@
 
 {{ define "content" }}
 <div class="admin-comments">
-    <h2>评论管理 <span class="comment-count">共 {{ .Total }} 条</span></h2>
+    <p class="eyebrow">MODERATION</p>
+    <h1>评论管理 <span class="comment-count">共 {{ .Total }} 条</span></h1>
 
     {{- if .Comments -}}
     <div class="admin-comment-list">

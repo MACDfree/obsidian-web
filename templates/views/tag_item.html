@@ -6,13 +6,15 @@
 
 {{ define "content" }}
 <div class="tag-item-page">
-    <h2>#{{.tag}}</h2>
+    <p class="eyebrow">TAGGED WITH</p>
+    <h1>#{{.tag}}</h1>
     <ul class="note-list">
-        {{- range .list -}}
+        {{- range $index, $note := .list -}}
         <li>
+            <span class="note-index">{{ printf "%02d" (add $index 1) }}</span>
             <div class="note-header">
                 <div class="note-title">
-                    {{- if and .Publish $.Auth.IsLogin -}}<span style="color: var(--primary); margin-right: 0.25rem;">🌐</span>{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+                {{- if and .Publish $.Auth.IsLogin -}}<span class="publish-mark" title="公开文章">PUBLIC</span>{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
                 </div>
                 <div class="note-date">
                     {{- date "2006-01-02" .Created -}}

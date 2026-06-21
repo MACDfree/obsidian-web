@@ -6,13 +6,15 @@
 
 {{ define "content" }}
 <div class="auth-form">
-    <h2 style="text-align: center; margin-bottom: 1.5rem;">登录</h2>
+    <p class="eyebrow">PRIVATE ARCHIVE</p>
+    <h1>访客登录</h1>
+    <p class="page-lead">输入密码以阅读未公开的笔记。</p>
     <form action="/auth" method="post">
         <div class="form-group">
             <label for="password">密码</label>
             <input type="password" name="password" id="password" placeholder="请输入密码">
         </div>
-        <button type="submit">登录</button>
+        <button type="submit">进入私藏 →</button>
     </form>
 </div>
 {{ end }}

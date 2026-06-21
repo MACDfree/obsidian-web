@@ -1,12 +1,18 @@
 {{ template "base.html" . }}
 
 {{ define "content" }}
+<section class="index-intro">
+    <p class="eyebrow">RECENT NOTES</p>
+    <h1>近期札记</h1>
+    <p>一些关于技术、阅读与日常的记录。</p>
+</section>
 <ul class="note-list">
-    {{- range .list -}}
+    {{- range $index, $note := .list -}}
     <li>
+        <span class="note-index">{{ printf "%02d" (add $index 1) }}</span>
         <div class="note-header">
             <div class="note-title">
-                {{- if and .Publish $.Auth.IsLogin -}}<span style="color: var(--primary); margin-right: 0.25rem;">🌐</span>{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
+                {{- if and .Publish $.Auth.IsLogin -}}<span class="publish-mark" title="公开文章">PUBLIC</span>{{- end -}}<a href="/note/{{.FullTitle}}">{{- .FullTitle -}}</a>
             </div>
             <div class="note-date">
                 {{- date "2006-01-02" .Created -}}

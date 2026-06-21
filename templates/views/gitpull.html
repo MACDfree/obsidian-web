@@ -6,10 +6,11 @@
 
 {{ define "content" }}
 <div class="search">
-    <h2 style="margin-bottom: 1rem;">Git 同步</h2>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">{{ .GitStatus }}</p>
-    <button type="button" onclick="gitpull()" style="margin-bottom: 1rem;">git pull</button>
-    <pre id="out" style="background: var(--bg-secondary); padding: 1rem; border-radius: var(--radius-md); font-size: 0.85rem; min-height: 100px; overflow: auto;"></pre>
+    <p class="eyebrow">REPOSITORY</p>
+    <h1>Git 同步</h1>
+    <p class="page-lead">{{ .GitStatus }}</p>
+    <button type="button" onclick="gitpull()">拉取最新笔记 →</button>
+    <pre id="out" class="sync-output"></pre>
 </div>
 
 <script>

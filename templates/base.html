@@ -12,19 +12,21 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">跳到正文</a>
     <div class="container">
         <header class="header">
             <div class="header-content">
                 <div class="logowrap">
+                    <span class="site-kicker">OBSIDIAN · WEB LOG</span>
                     <a class="logo" href="/">{{ .Site.Title }}</a>
                 </div>
-                <nav class="site-navbar">
+                <nav class="site-navbar" aria-label="主导航">
                     <ul>
                         <li>
                             <a href="/" class="{{ if eq .CurrentPath "/" }}active{{ end }}">首页</a>
                         </li>
                         <li>
-                            <a href="/search" class="{{ if eq .CurrentPath "/search" }}active{{ end }}">查询</a>
+                            <a href="/search" class="{{ if eq .CurrentPath "/search" }}active{{ end }}">搜索</a>
                         </li>
                         <li>
                             <a href="/tag" class="{{ if eq .CurrentPath "/tag" }}active{{ end }}">标签</a>
@@ -38,7 +40,7 @@
                         </li>
                         {{- else -}}
                         <li>
-                            <a href="/gitpull" class="{{ if eq .CurrentPath "/gitpull" }}active{{ end }}">git pull</a>
+                            <a href="/gitpull" class="{{ if eq .CurrentPath "/gitpull" }}active{{ end }}">同步</a>
                         </li>
                         <li>
                             <a href="/admin/comments" class="{{ if eq .CurrentPath "/admin/comments" }}active{{ end }}">评论管理</a>
@@ -49,15 +51,15 @@
             </div>
         </header>
 
-        <main class="content">
+        <main class="content" id="main-content">
             {{block "content" .}}
             {{end}}
         </main>
 
         <footer>
-            <p>
-                Powered by <a href="https://github.com/MACDfree/obsidian-web" target="_blank">obsidian-web</a> | <a href="https://github.com/MACDfree" target="_blank">GitHub</a> | <a href="mailto:macdfree@163.com">Email</a>
-            </p>
+            <span class="footer-mark">※</span>
+            <p>以文字记录时间</p>
+            <p class="footer-links"><a href="https://github.com/MACDfree/obsidian-web" target="_blank" rel="noreferrer">obsidian-web</a> · <a href="https://github.com/MACDfree" target="_blank" rel="noreferrer">GitHub</a> · <a href="mailto:macdfree@163.com">Email</a></p>
         </footer>
     </div>
 
