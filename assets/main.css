@@ -453,6 +453,62 @@ img { max-width: 100%; }
 .post-content div.chroma td:last-child pre.chroma {
   min-width: max-content;
 }
+
+/* Chroma 使用 class 模式输出语法 token；这些颜色需与 mdparser 的 Monokai 主题一致。 */
+.post-content .chroma .err { color: #960050; background-color: #1e0010; }
+.post-content .chroma .k,
+.post-content .chroma .kc,
+.post-content .chroma .kd,
+.post-content .chroma .kp,
+.post-content .chroma .kr,
+.post-content .chroma .kt { color: #66d9ef; }
+.post-content .chroma .kn,
+.post-content .chroma .nt,
+.post-content .chroma .o,
+.post-content .chroma .ow { color: #f92672; }
+.post-content .chroma .na,
+.post-content .chroma .nc,
+.post-content .chroma .nd,
+.post-content .chroma .ne,
+.post-content .chroma .nf,
+.post-content .chroma .nx { color: #a6e22e; }
+.post-content .chroma .no { color: #66d9ef; }
+.post-content .chroma .l,
+.post-content .chroma .m,
+.post-content .chroma .mb,
+.post-content .chroma .mf,
+.post-content .chroma .mh,
+.post-content .chroma .mi,
+.post-content .chroma .il,
+.post-content .chroma .mo { color: #ae81ff; }
+.post-content .chroma .ld,
+.post-content .chroma .s,
+.post-content .chroma .sa,
+.post-content .chroma .sb,
+.post-content .chroma .sc,
+.post-content .chroma .dl,
+.post-content .chroma .sd,
+.post-content .chroma .s2,
+.post-content .chroma .sh,
+.post-content .chroma .si,
+.post-content .chroma .sx,
+.post-content .chroma .sr,
+.post-content .chroma .s1,
+.post-content .chroma .ss { color: #e6db74; }
+.post-content .chroma .se { color: #ae81ff; }
+.post-content .chroma .c,
+.post-content .chroma .ch,
+.post-content .chroma .cm,
+.post-content .chroma .c1,
+.post-content .chroma .cs,
+.post-content .chroma .cp,
+.post-content .chroma .cpf,
+.post-content .chroma .gu { color: #75715e; }
+.post-content .chroma .gd { color: #f92672; }
+.post-content .chroma .gi { color: #a6e22e; }
+.post-content .chroma .ge { font-style: italic; }
+.post-content .chroma .gs { font-weight: bold; }
+
 .code-copy-btn {
   position: absolute;
   top: .45rem;
