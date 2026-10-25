@@ -14,7 +14,7 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-RUN go build -ldflags="-s -w"
+RUN go build -tags sqlite_fts5 -ldflags="-s -w"
 RUN upx ./obsidian-web
 
 FROM alpine:3.23

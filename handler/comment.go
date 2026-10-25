@@ -20,13 +20,13 @@ type CreateCommentRequest struct {
 
 // CommentResponse 评论响应结构
 type CommentResponse struct {
-	ID            uint              `json:"id"`
-	Nickname      string            `json:"nickname"`
-	Content       string            `json:"content"`
-	CreatedAt     time.Time         `json:"created_at"`
-	NoteFullTitle string            `json:"note_full_title,omitempty"`
-	Status        int               `json:"status,omitempty"`
-	IP            string            `json:"ip,omitempty"`
+	ID            uint               `json:"id"`
+	Nickname      string             `json:"nickname"`
+	Content       string             `json:"content"`
+	CreatedAt     time.Time          `json:"created_at"`
+	NoteFullTitle string             `json:"note_full_title,omitempty"`
+	Status        int                `json:"status,omitempty"`
+	IP            string             `json:"ip,omitempty"`
 	Replies       []*CommentResponse `json:"replies"`
 }
 
@@ -118,6 +118,13 @@ func ListComments(ctx *gin.Context) {
 	fullTitle := ctx.Query("note_full_title")
 	if fullTitle == "" {
 		ctx.JSON(http.StatusBadRequest, gin.H{"code": 1, "msg": "缺少参数"})
+		return
+	}
+
+	isLogin := ctx.MustGet("isLogin").(bool)
+	note, err := db.GetNoteByPath(fullTitle)
+	if err != nil || (!isLogin && !note.Publish) {
+		ctx.JSON(http.StatusNotFound, gin.H{"code": 1, "msg": "笔记不存在"})
 		return
 	}
 

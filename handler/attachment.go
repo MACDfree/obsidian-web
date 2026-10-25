@@ -3,6 +3,7 @@ package handler
 import (
 	"obsidian-web/config"
 	"obsidian-web/db"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -33,6 +34,36 @@ func safeJoin(baseDir, userPath string) (string, bool) {
 	}
 
 	return cleanPath, true
+}
+
+// resolveRegularFile 在 baseDir 内解析真实路径并确保是普通文件，
+// 拒绝目录以及指向 baseDir 之外的符号链接
+func resolveRegularFile(baseDir, userPath string) (string, bool) {
+	safePath, ok := safeJoin(baseDir, userPath)
+	if !ok {
+		return "", false
+	}
+
+	realBase, err := filepath.EvalSymlinks(baseDir)
+	if err != nil {
+		return "", false
+	}
+
+	realPath, err := filepath.EvalSymlinks(safePath)
+	if err != nil {
+		return "", false
+	}
+
+	if realPath != realBase && !strings.HasPrefix(realPath, realBase+string(filepath.Separator)) {
+		return "", false
+	}
+
+	info, err := os.Stat(realPath)
+	if err != nil || !info.Mode().IsRegular() {
+		return "", false
+	}
+
+	return realPath, true
 }
 
 func Attachment(ctx *gin.Context) {

@@ -9,6 +9,9 @@
     <p class="eyebrow">PRIVATE ARCHIVE</p>
     <h1>访客登录</h1>
     <p class="page-lead">输入密码以阅读未公开的笔记。</p>
+    {{- if .Error }}
+    <p class="form-error" role="alert">{{ .Error }}</p>
+    {{- end }}
     <form action="/auth" method="post">
         <div class="form-group">
             <label for="password">密码</label>

@@ -9,9 +9,9 @@ obsidian-web 是一个将 Obsidian 笔记库发布为可浏览网站的 Go Web �
 ## 构建与运行
 
 ```bash
-go build                    # 生成 ./obsidian-web 二进制文件
-go run main.go              # 直接运行
-./obsidian-web -gitpull     # 启动前通过 go-git 拉取笔记库（需要配置 git_url）
+go build -tags sqlite_fts5          # 生成 ./obsidian-web 二进制文件（FTS5 全文索引必需）
+go run -tags sqlite_fts5 main.go    # 直接运行
+./obsidian-web -gitpull             # 启动前通过 go-git 拉取笔记库（需要配置 git_url）
 ```
 
 - 需要**启用 CGO**（使用了 `mattn/go-sqlite3`）
@@ -45,11 +45,13 @@ go run main.go              # 直接运行
 
 **评论系统**：支持嵌套评论（父子树结构）、基于 IP 的限流（10 分钟内 3 条）、敏感词黑名单过滤和管理员管理（隐藏/删除）。评论存储在独立的 SQLite 数据库（`data/comments.db`）中。
 
-**Markdown 处理流程**：Goldmark + GFM，`[[wikilink]]` 解析（→ 根据文件扩展名解析为 `/note/` 或 `/attachment/`）、Chroma 语法高亮（Monokai，行号）、可选 MathJax（通过 frontmatter 中的 `mathjax: true` 启用）、YAML frontmatter 提取、纯文件名图片路径自动添加前缀。
+**Markdown 处理流程**：Goldmark + GFM，`[[wikilink]]` 解析（→ 根据文件扩展名解析为 `/note/` 或 `/attachment/`）、Chroma 语法高亮（Monokai，行号）、可选 MathJax（通过 frontmatter 中的 `mathjax: true` 启用）、YAML frontmatter 提取、纯文件名图片路径自动添加前缀、h2/h3 标题锚点与文内目录（TOC）。
+
+**UI**：深色模式（跟随系统偏好，导航栏按钮手动切换并记忆到 localStorage）、PWA manifest（手机可添加到主屏幕）、RSS 订阅链接。
 
 **反向链接**：通过 `NoteLink` 跟踪笔记间的 wikilink。`GetBacklinks()` 返回所有链接到指定笔记的笔记，对于未登录用户按发布状态过滤。
 
-**搜索**：全文搜索通过正则表达式扫描可访问笔记的标题和文件内容，返回高亮匹配结果。
+**搜索**：SQLite FTS5 全文索引（trigram 分词器，支持中文子串匹配），关键词按字面量匹配并高亮；不足 3 个字符的关键词退化为 LIKE 扫描。索引在笔记库扫描（`noteloader.Load()`）时重建。
 
 **模板**：Go `html/template`，使用 `multitemplate` 进行布局组合（`base.html` + 视图模板 + 部分模板）。提供 Sprig 函数和 `SafeHTML` 辅助函数。
 
@@ -62,6 +64,7 @@ go run main.go              # 直接运行
 | GET | `/tag/*tag` | 标签列表或按标签筛选笔记 |
 | GET | `/note/*path` | 笔记详情页 |
 | GET | `/search` | 搜索笔记 |
+| GET | `/feed.xml` | RSS 订阅（仅公开笔记） |
 | GET | `/attachment/:attach` | 提供附件文件 |
 | GET | `/auth` | 登录页面 |
 | POST | `/auth` | 登录操作 |
@@ -81,7 +84,7 @@ go run main.go              # 直接运行
 - `attachment_path` — 附件的子目录名
 - `paginate` — 每页笔记数（默认：20）
 - `title` — 网站标题
-- `password` — 私有笔记的密码（空 = 无需认证）
+- `password` — 私有笔记的密码（留空则禁止登录，私有笔记不可访问）
 - `bind_addr` — 服务器绑定地址（默认：`127.0.0.1:8888`）
 - `git_url` — go-git 拉取/克隆用的 Git 仓库 URL（可选，启用 `-gitpull` 标志和 cron 任务）
 - `git_token` — 私有 Git 仓库的认证令牌（可选）

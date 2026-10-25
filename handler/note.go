@@ -1,14 +1,12 @@
 package handler
 
 import (
-	"bufio"
 	"html/template"
 	"obsidian-web/config"
 	"obsidian-web/db"
 	"obsidian-web/logger"
 	"obsidian-web/mdparser"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -105,19 +103,17 @@ func NotePage(ctx *gin.Context) {
 	path = strings.Trim(path, "/")
 	isLogin := ctx.MustGet("isLogin").(bool)
 	if strings.Contains(path, "/assets/") {
-		// 兼容思源导出的附件情况
-		// 去对应路径下找附件并返回
-
-		// 检查路径遍历攻击
-		if strings.Contains(path, "..") {
-			ctx.Status(400)
+		// 兼容思源导出的附件。这类文件不在附件索引中，无法判断发布状态，
+		// 只对已登录用户开放，避免匿名读取笔记库中的任意文件
+		if !isLogin {
+			ctx.Status(404)
 			return
 		}
 
-		// 安全连接路径，确保在 NotePath 目录内
-		safePath, ok := safeJoin(config.Get().NotePath, path)
+		// 仅服务 NotePath 内的普通文件，拒绝目录和符号链接逃逸
+		safePath, ok := resolveRegularFile(config.Get().NotePath, path)
 		if !ok {
-			ctx.Status(400)
+			ctx.Status(404)
 			return
 		}
 
@@ -160,7 +156,7 @@ func NotePage(ctx *gin.Context) {
 
 	withMathJax := note.ExtInfo != nil && note.ExtInfo["mathjax"] != nil && note.ExtInfo["mathjax"].(bool)
 
-	htmlStr, err := mdparser.ConvertToHTML(source, withMathJax)
+	htmlStr, toc, err := mdparser.ConvertToHTML(source, withMathJax)
 
 	if err != nil {
 		logger.Error(errors.WithStack(err))
@@ -189,6 +185,7 @@ func NotePage(ctx *gin.Context) {
 		"ExtInfo":     note.ExtInfo,
 		"info":        note,
 		"content":     template.HTML(htmlStr),
+		"Toc":         toc,
 		"Backlinks":   backlinks,
 	})
 }
@@ -207,46 +204,25 @@ func SearchNotes(ctx *gin.Context) {
 				"Title": config.Get().Title,
 			},
 			"CurrentPath": "/search",
+			"Keyword":     keyword,
 		})
 		return
 	}
 
-	// 进行关键词的搜索，搜索范围为说有md文件的名称及内容，进行多线程处理
-	// 先从数据库中查找当前可以访问的文件
-	notes, err := db.ListAllNote(isLogin)
+	// 全文搜索：命中 FTS5 索引（trigram），关键词按字面量匹配
+	hits, err := db.SearchNotes(isLogin, keyword)
 	if err != nil {
 		logger.Error(errors.WithStack(err))
 		ctx.String(500, "error: %v", err)
 		return
 	}
-
-	searchReg := regexp.MustCompile("(?i)" + keyword)
-	results := make([]*SearchResult, 0)
-	for _, note := range notes {
-		result := SearchResult{Note: &note}
-		if searchReg.MatchString(note.FullTitle) {
-			result.HitTitle = searchReg.ReplaceAllString(note.FullTitle, "<mark>$0</mark>")
-		}
-		// 下面需要打开文档进行匹配了
-		mdFile, err := os.Open(note.Path)
-		if err != nil {
-			logger.Error(errors.WithStack(err))
-			ctx.String(500, "error: %v", err)
-			return
-		}
-		defer mdFile.Close()
-
-		scanner := bufio.NewScanner(mdFile)
-		for scanner.Scan() {
-			line := scanner.Text()
-			if searchReg.MatchString(line) {
-				result.HitText = append(result.HitText, searchReg.ReplaceAllString(line, "<mark>$0</mark>"))
-			}
-		}
-
-		if len(result.HitTitle) > 0 || len(result.HitText) > 0 {
-			results = append(results, &result)
-		}
+	results := make([]*SearchResult, 0, len(hits))
+	for _, hit := range hits {
+		results = append(results, &SearchResult{
+			FullTitle: hit.FullTitle,
+			HitTitle:  hit.HitTitle,
+			HitText:   hit.HitText,
+		})
 	}
 
 	ctx.HTML(200, "search.html", gin.H{
@@ -257,12 +233,13 @@ func SearchNotes(ctx *gin.Context) {
 			"Title": config.Get().Title,
 		},
 		"CurrentPath":   "/search",
+		"Keyword":       keyword,
 		"SearchResults": results,
 	})
 }
 
 type SearchResult struct {
-	*db.Note
-	HitTitle string
-	HitText  []string
+	FullTitle string
+	HitTitle  string
+	HitText   []string
 }

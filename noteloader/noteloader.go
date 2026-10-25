@@ -54,9 +54,9 @@ func loadNoteBook() {
 
 	// 用于保存笔记信息和附件引用
 	type noteWithRefs struct {
-		note      *db.Note
-		refs      []string
-		content   []byte // 保存内容用于后续提取笔记链接
+		note    *db.Note
+		refs    []string
+		content []byte // 保存内容用于后续提取笔记链接
 	}
 	var notesWithRefs []noteWithRefs
 
@@ -184,6 +184,19 @@ func loadNoteBook() {
 				logger.Error(errors.WithStack(err))
 			}
 		}
+	}
+
+	// 重建全文搜索索引
+	docs := make([]db.SearchDoc, 0, len(notesWithRefs))
+	for _, nwr := range notesWithRefs {
+		docs = append(docs, db.SearchDoc{
+			NoteID:  nwr.note.ID,
+			Title:   nwr.note.FullTitle,
+			Content: string(db.StripFrontMatter(nwr.content)),
+		})
+	}
+	if err := db.RebuildSearchIndex(docs); err != nil {
+		logger.Error(errors.WithStack(err))
 	}
 
 	logger.Infof("init notebook cost: %v", time.Since(start))

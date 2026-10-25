@@ -11,7 +11,8 @@ func Error() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		ctx.Next()
 
-		if ctx.Writer.Status() == 500 || ctx.Writer.Status() == 404 {
+		// 处理器已写出响应体（如 ctx.String 的报错文本）时不要再追加整页 HTML
+		if (ctx.Writer.Status() == 500 || ctx.Writer.Status() == 404) && ctx.Writer.Size() <= 0 {
 			isLogin := ctx.MustGet("isLogin").(bool)
 			ctx.HTML(ctx.Writer.Status(), strconv.Itoa(ctx.Writer.Status())+".html", gin.H{
 				"Auth": gin.H{

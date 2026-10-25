@@ -57,6 +57,20 @@ func init() {
 
 	// 迁移 schema
 	db.AutoMigrate(&Note{}, &AttachInfo{}, &NoteAttachment{}, &NoteLink{})
+
+	// FTS5 全文索引（trigram 分词器支持中文子串匹配，需要 -tags sqlite_fts5 构建）
+	// 先显式校验模块：表已存在时 IF NOT EXISTS 不会触发模块加载，否则会带着坏掉的搜索功能启动
+	var fts5Modules int64
+	if err := db.Raw("SELECT count(*) FROM pragma_module_list WHERE name = 'fts5'").Scan(&fts5Modules).Error; err != nil {
+		panic("failed to inspect sqlite modules: " + err.Error())
+	}
+	if fts5Modules == 0 {
+		panic("sqlite fts5 module unavailable: rebuild with -tags sqlite_fts5")
+	}
+	err = db.Exec("CREATE VIRTUAL TABLE IF NOT EXISTS notes_fts USING fts5(note_id UNINDEXED, title, content, tokenize='trigram')").Error
+	if err != nil {
+		panic("failed to create fts5 table (build with -tags sqlite_fts5): " + err.Error())
+	}
 }
 
 func DeleteAll() error {
@@ -95,21 +109,11 @@ func ListNote(isLogin bool, pageIndex int) ([]Note, error) {
 	}
 }
 
-func ListAllNote(isLogin bool) ([]Note, error) {
+// ListRecentPublicNotes 按更新时间返回最近的公开笔记（用于 RSS）
+func ListRecentPublicNotes(limit int) ([]Note, error) {
 	var notes []Note = make([]Note, 0)
-	if isLogin {
-		result := db.Order("created desc").Find(&notes)
-		for i := range notes {
-			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
-		}
-		return notes, result.Error
-	} else {
-		result := db.Where("publish = ?", true).Order("created desc").Find(&notes)
-		for i := range notes {
-			notes[i].FullTitle = strings.TrimSuffix(notes[i].FullTitle, "/_index")
-		}
-		return notes, result.Error
-	}
+	result := db.Where("publish = ?", true).Order("updated desc").Limit(limit).Find(&notes)
+	return notes, result.Error
 }
 
 func ListTag(isLogin bool) ([]TagCount, error) {

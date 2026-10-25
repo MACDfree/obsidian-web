@@ -30,6 +30,16 @@
         <h1 class="post-title">{{.info.Title}}</h1>
         <div class="post-meta"><span class="created">刊于 {{- date "2006-01-02" .info.Created -}}</span><span class="updated">修订 {{- date "2006-01-02" .info.Updated -}}</span></div>
     </header>
+    {{- if .Toc -}}
+    <details class="toc">
+        <summary>本文目录</summary>
+        <ul>
+            {{- range .Toc -}}
+            <li class="toc-level-{{.Level}}"><a href="#{{.ID}}">{{.Text}}</a></li>
+            {{- end -}}
+        </ul>
+    </details>
+    {{- end -}}
     <div class="post-content">
         {{.content}}
     </div>

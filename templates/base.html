@@ -9,6 +9,18 @@
     {{end}}
 
     <link rel="stylesheet" href="/assets/main.css">
+    <link rel="manifest" href="/assets/manifest.json">
+    <link rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" href="/feed.xml">
+    <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
+    <meta name="theme-color" content="#f2ecdf" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#211e1a" media="(prefers-color-scheme: dark)">
+    <script>
+        // 首屏前应用已保存的主题，避免闪烁
+        (function () {
+            var t = localStorage.getItem('theme');
+            if (t) document.documentElement.setAttribute('data-theme', t);
+        })();
+    </script>
 </head>
 
 <body>
@@ -46,6 +58,9 @@
                             <a href="/admin/comments" class="{{ if eq .CurrentPath "/admin/comments" }}active{{ end }}">评论管理</a>
                         </li>
                         {{- end -}}
+                        <li>
+                            <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换深色模式" title="切换深色模式">◐</button>
+                        </li>
                     </ul>
                 </nav>
             </div>
@@ -73,6 +88,16 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // 深色模式切换
+            document.getElementById('theme-toggle').addEventListener('click', function () {
+                var root = document.documentElement;
+                var isDark = root.getAttribute('data-theme') === 'dark' ||
+                    (!root.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                var next = isDark ? 'light' : 'dark';
+                root.setAttribute('data-theme', next);
+                localStorage.setItem('theme', next);
+            });
+
             // 获取图片查看器元素
             const imageViewer = document.getElementById('image-viewer');
             const viewerImage = document.getElementById('viewer-image');

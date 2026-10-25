@@ -48,6 +48,7 @@ func NewRouter() *gin.Engine {
 	r.GET("/note/*path", handler.NotePage)
 	r.GET("/attachment/:attach", handler.Attachment)
 	r.GET("/search", handler.SearchNotes)
+	r.GET("/feed.xml", handler.RSS)
 	r.GET("/gitpull", handler.GitPullPage)
 	r.POST("/gitpull", handler.GitPull)
 

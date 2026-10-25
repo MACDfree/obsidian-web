@@ -3,6 +3,7 @@ package mdparser
 import (
 	"bytes"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	chromahtml "github.com/alecthomas/chroma/v2/formatters/html"
@@ -15,6 +16,7 @@ import (
 	"github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/renderer"
 	"github.com/yuin/goldmark/renderer/html"
+	"github.com/yuin/goldmark/text"
 	"github.com/yuin/goldmark/util"
 	"go.abhg.dev/goldmark/frontmatter"
 	"go.abhg.dev/goldmark/wikilink"
@@ -183,18 +185,60 @@ func nodeToHTMLText(n ast.Node, source []byte) []byte {
 	return buf.Bytes()
 }
 
-func ConvertToHTML(src []byte, withMathJax bool) (string, error) {
-	var htmlBuf bytes.Buffer
-	var err error
-	if withMathJax {
-		err = markdownWithMathJax.Convert(src, &htmlBuf)
+// TocItem 文内目录条目
+type TocItem struct {
+	Level int
+	ID    string
+	Text  string
+}
 
-	} else {
-		err = markdown.Convert(src, &htmlBuf)
+func ConvertToHTML(src []byte, withMathJax bool) (string, []TocItem, error) {
+	md := markdown
+	if withMathJax {
+		md = markdownWithMathJax
 	}
-	if err != nil {
-		return "", err
+
+	doc := md.Parser().Parse(text.NewReader(src))
+	toc := collectToc(doc, src)
+
+	var htmlBuf bytes.Buffer
+	if err := md.Renderer().Render(&htmlBuf, src, doc); err != nil {
+		return "", nil, err
 	}
-	// logger.Info(cssStr.String())
-	return htmlBuf.String(), nil
+	return htmlBuf.String(), toc, nil
+}
+
+func collectToc(doc ast.Node, src []byte) []TocItem {
+	toc := make([]TocItem, 0)
+	ast.Walk(doc, func(n ast.Node, entering bool) (ast.WalkStatus, error) {
+		if !entering {
+			return ast.WalkContinue, nil
+		}
+		if h, ok := n.(*ast.Heading); ok && h.Level >= 2 && h.Level <= 3 {
+			id, _ := h.AttributeString("id")
+			idBytes, _ := id.([]byte)
+			toc = append(toc, TocItem{
+				Level: h.Level,
+				ID:    string(idBytes),
+				Text:  nodeText(h, src),
+			})
+		}
+		return ast.WalkContinue, nil
+	})
+	return toc
+}
+
+// nodeText 提取节点的纯文本（不做 HTML 转义，由模板层负责）
+func nodeText(n ast.Node, source []byte) string {
+	var sb strings.Builder
+	for c := n.FirstChild(); c != nil; c = c.NextSibling() {
+		if s, ok := c.(*ast.String); ok && s.IsCode() {
+			sb.Write(s.Text(source))
+		} else if !c.HasChildren() {
+			sb.Write(c.Text(source))
+		} else {
+			sb.WriteString(nodeText(c, source))
+		}
+	}
+	return sb.String()
 }

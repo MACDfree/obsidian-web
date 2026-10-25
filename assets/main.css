@@ -33,6 +33,57 @@
   --primary: var(--accent);
   --primary-hover: var(--accent-dark);
   --border: var(--rule);
+  color-scheme: light;
+  --bg-dots:
+    radial-gradient(circle at 20% 30%, rgba(75, 62, 42, .035) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 80% 70%, rgba(75, 62, 42, .025) 0 1px, transparent 1.5px);
+  --input-bg: rgba(255, 255, 255, .13);
+  --code-bg: rgba(111, 87, 51, .08);
+  --code-border: rgba(111, 87, 51, .15);
+  --status-normal: #596545;
+}
+
+/* 深色：暗纸暖墨。手动指定 data-theme="dark"，或跟随系统偏好 */
+:root[data-theme="dark"] {
+  --paper: #211e1a;
+  --paper-deep: #2a2620;
+  --ink: #e6dfcf;
+  --ink-soft: #b3a993;
+  --ink-faint: #8a7f6b;
+  --accent: #d9705c;
+  --accent-dark: #e28d7a;
+  --rule: #4a443a;
+  --rule-dark: #5d5548;
+  color-scheme: dark;
+  --bg-dots:
+    radial-gradient(circle at 20% 30%, rgba(230, 223, 207, .04) 0 1px, transparent 1.5px),
+    radial-gradient(circle at 80% 70%, rgba(230, 223, 207, .028) 0 1px, transparent 1.5px);
+  --input-bg: rgba(255, 255, 255, .06);
+  --code-bg: rgba(230, 223, 207, .07);
+  --code-border: rgba(230, 223, 207, .14);
+  --status-normal: #9aa87f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #211e1a;
+    --paper-deep: #2a2620;
+    --ink: #e6dfcf;
+    --ink-soft: #b3a993;
+    --ink-faint: #8a7f6b;
+    --accent: #d9705c;
+    --accent-dark: #e28d7a;
+    --rule: #4a443a;
+    --rule-dark: #5d5548;
+    color-scheme: dark;
+    --bg-dots:
+      radial-gradient(circle at 20% 30%, rgba(230, 223, 207, .04) 0 1px, transparent 1.5px),
+      radial-gradient(circle at 80% 70%, rgba(230, 223, 207, .028) 0 1px, transparent 1.5px);
+    --input-bg: rgba(255, 255, 255, .06);
+    --code-bg: rgba(230, 223, 207, .07);
+    --code-border: rgba(230, 223, 207, .14);
+    --status-normal: #9aa87f;
+  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -48,9 +99,7 @@ body {
   min-height: 100vh;
   color: var(--ink);
   background-color: var(--paper);
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(75, 62, 42, .035) 0 1px, transparent 1.5px),
-    radial-gradient(circle at 80% 70%, rgba(75, 62, 42, .025) 0 1px, transparent 1.5px);
+  background-image: var(--bg-dots);
   background-size: 18px 18px, 23px 23px;
   font-family: var(--serif);
   line-height: 1.82;
@@ -387,8 +436,8 @@ img { max-width: 100%; }
 .post-content code:not(.chroma *) {
   padding: .1em .28em;
   color: var(--accent-dark);
-  background: rgba(111, 87, 51, .08);
-  border: 1px solid rgba(111, 87, 51, .15);
+  background: var(--code-bg);
+  border: 1px solid var(--code-border);
   font-family: var(--mono);
   font-size: .84em;
 }
@@ -532,6 +581,41 @@ img { max-width: 100%; }
 
 .post-footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
 
+/* 文内目录 */
+.toc {
+  margin: 0 0 2.2rem;
+  padding: .85rem 1.1rem;
+  border: 1px solid var(--rule);
+}
+
+.toc summary {
+  color: var(--ink-soft);
+  cursor: pointer;
+  font: 700 .7rem/1.5 var(--sans);
+  letter-spacing: .14em;
+}
+
+.toc summary:hover { color: var(--accent); }
+.toc ul { margin: .7rem 0 .2rem; padding: 0; list-style: none; }
+.toc li { margin: .3rem 0; font: .82rem/1.6 var(--sans); }
+.toc li a { color: var(--ink-soft); text-decoration: none; }
+.toc li a:hover { color: var(--accent); }
+.toc-level-3 { padding-left: 1.2rem; }
+
+/* 主题切换按钮 */
+.theme-toggle {
+  width: auto;
+  margin: 0;
+  padding: .15rem .45rem;
+  color: var(--ink-soft);
+  background: none;
+  border: 1px solid var(--rule-dark);
+  font-size: .85rem;
+  line-height: 1.3;
+}
+
+.theme-toggle:hover { color: var(--accent); background: none; border-color: var(--accent); }
+
 /* Shared panels */
 .backlinks,
 .comments-section {
@@ -571,7 +655,7 @@ textarea {
   width: 100%;
   padding: .8rem .85rem;
   color: var(--ink);
-  background: rgba(255, 255, 255, .13);
+  background: var(--input-bg);
   border: 1px solid var(--rule-dark);
   border-radius: 0;
   outline: none;
@@ -621,6 +705,14 @@ mark { padding: .05em .15em; color: var(--paper); background: var(--accent); }
 .auth-form .page-lead { text-align: center; }
 .auth-form h1 { font-size: 2.5rem; }
 .auth-form button { width: 100%; }
+.auth-form .form-error {
+  margin-top: 1rem;
+  padding: .6rem .8rem;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: .9rem;
+  text-align: center;
+}
 
 .sync-output {
   min-height: 120px;
@@ -688,7 +780,7 @@ mark { padding: .05em .15em; color: var(--paper); background: var(--accent); }
 .admin-comment-meta { display: flex; flex-wrap: wrap; gap: .35rem .8rem; color: var(--ink-faint); font: .66rem/1.5 var(--mono); }
 .admin-comment-author { color: var(--accent-dark); font-family: var(--serif); font-size: .9rem; font-weight: 700; }
 .admin-comment-status { padding: 0 .3rem; border: 1px solid currentColor; }
-.status-normal { color: #596545; }
+.status-normal { color: var(--status-normal); }
 .status-hidden { color: var(--accent); }
 .admin-comment-note { margin-top: .45rem; font-size: .82rem; }
 .admin-comment-content { margin-top: .35rem; }

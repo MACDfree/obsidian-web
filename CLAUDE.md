@@ -9,9 +9,9 @@ obsidian-web 是一个将 Obsidian 笔记库发布为可浏览网站的 Go Web �
 ## 构建与运行
 
 ```bash
-go build                    # 生成 ./obsidian-web 二进制文件
-go run main.go              # 直接运行
-./obsidian-web -pre "git pull"  # 运行前执行预启动脚本
+go build -tags sqlite_fts5          # 生成 ./obsidian-web 二进制文件（FTS5 全文索引必需）
+go run -tags sqlite_fts5 main.go    # 直接运行
+./obsidian-web -gitpull             # 启动前通过 go-git 拉取笔记库（需要配置 git_url）
 ```
 
 - 需要**启用 CGO**（使用了 `mattn/go-sqlite3`）
@@ -52,8 +52,10 @@ go run main.go              # 直接运行
 - `attachment_path` — 附件的子目录名
 - `paginate` — 每页笔记数（默认：20）
 - `title` — 网站标题
-- `password` — 私有笔记的密码（空 = 无需认证）
+- `password` — 私有笔记的密码（留空则禁止登录，私有笔记不可访问）
 - `bind_addr` — 服务器绑定地址（默认：`127.0.0.1:8888`）
+- `git_url` — go-git 拉取/克隆用的 Git 仓库 URL（可选，启用 `-gitpull` 标志和 cron 任务）
+- `git_token` — 私有 Git 仓库的认证令牌（可选）
 
 ## 约定
 

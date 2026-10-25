@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#f2ecdf"/>
+  <rect x="28" y="28" width="456" height="456" fill="none" stroke="#39362f" stroke-width="8"/>
+  <rect x="44" y="44" width="424" height="424" fill="none" stroke="#39362f" stroke-width="2"/>
+  <text x="240" y="365" font-family="Georgia, 'Times New Roman', serif" font-size="320" fill="#25231f" text-anchor="middle">O</text>
+  <circle cx="376" cy="356" r="24" fill="#9f3527"/>
+</svg>

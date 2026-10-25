@@ -1,4 +1,4 @@
-note_path: "D:\\obnote"
+note_path: "/Users/macd/code/obnote"
 ignore_paths: [".git", "Excalidraw", "templates"]
 attachment_path: "attachments"
 paginate: 20
