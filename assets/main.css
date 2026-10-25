@@ -287,7 +287,7 @@ img { max-width: 100%; }
   align-items: baseline;
 }
 
-.note-title { font-size: clamp(1.12rem, 2.5vw, 1.45rem); line-height: 1.35; }
+.note-title { font-size: clamp(1.12rem, 2.5vw, 1.45rem); line-height: 1.35; overflow-wrap: break-word; }
 .note-title a { text-decoration: none; }
 .note-title a:hover { color: var(--accent); }
 .note-date {
@@ -360,6 +360,7 @@ img { max-width: 100%; }
   font-weight: 400;
   line-height: 1.02;
   letter-spacing: -.055em;
+  overflow-wrap: break-word;
 }
 
 .post-meta {
