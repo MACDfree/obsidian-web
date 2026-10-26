@@ -62,4 +62,5 @@ go run -tags sqlite_fts5 main.go    # 直接运行
 - 提交信息遵循 conventional-commit 风格：`feat(scope):`、`fix(scope):`、`refactor:` 等
 - Session 密钥在启动时随机生成（内存存储，重启后会话丢失）
 - Dockerfile 使用多阶段构建，启用 UPX 压缩，使用中国镜像源和 Asia/Shanghai 时区
+- 镜像内含二进制 + `templates/`、`static/`、`assets/`（运行时只读，与代码同版本发布）；部署时只需挂载 `config.yml`、`data/`、`logs/` 和笔记库
 - CI/CD 通过 Gitea Actions（`.gitea/workflows/`）—— 在 tag 推送时构建 Docker 镜像

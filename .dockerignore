@@ -1,0 +1,18 @@
+# 构建上下文只保留源码、go.mod/go.sum 和运行时资源目录（templates/static/assets）
+.git
+.gitea
+.trae
+Dockerfile
+.dockerignore
+
+# 本地运行产物
+obsidian-web
+*.db
+*.db-shm
+*.db-wal
+*.log
+logs/
+data/
+
+.DS_Store
+**/.DS_Store

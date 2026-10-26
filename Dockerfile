@@ -14,7 +14,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY . .
-RUN go build -tags sqlite_fts5 -ldflags="-s -w"
+# 缓存 Go 编译产物：仅改样式/模板时触发整层重建，也能命中已编译的依赖
+RUN --mount=type=cache,target=/root/.cache/go-build go build -tags sqlite_fts5 -ldflags="-s -w"
 RUN upx ./obsidian-web
 
 FROM alpine:3.23
@@ -28,6 +29,11 @@ RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 WORKDIR /app
 
 COPY --from=builder /build/obsidian-web /app/obsidian-web
+
+# 模板与静态资源随镜像一起发布，运行时只读；可变内容走 volume
+COPY templates /app/templates
+COPY static /app/static
+COPY assets /app/assets
 
 ENV GIN_MODE=release
 ENTRYPOINT ["./obsidian-web"]
