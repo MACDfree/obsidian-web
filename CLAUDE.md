@@ -32,7 +32,7 @@ go run -tags sqlite_fts5 main.go    # 直接运行
 - `config/` — 配置单例，通过 `sync.Once` 从 `config.yml` 加载
 - `db/` — GORM 模型（`Note`、`AttachInfo`、`NoteAttachment`、`NoteLink`）及所有数据库查询
 - `handler/` — Gin HTTP 处理器，处理笔记、附件、认证、git 拉取和静态文件
-- `mdparser/` — Goldmark markdown 处理流程，支持 wikilink 解析、语法高亮（Chroma/Monokai）、MathJax 和自定义图片渲染
+- `mdparser/` — Goldmark markdown 处理流程，支持 wikilink 解析、语法高亮（Chroma，深浅色主题自适应配色）、MathJax 和自定义图片渲染
 - `noteloader/` — 笔记库扫描器，解析 frontmatter，构建 SQLite 索引
 - `server/` — 路由设置、中间件注册、模板加载
 - `middleware/` — 认证、会话（内存 `memstore`）、日志、错误页面

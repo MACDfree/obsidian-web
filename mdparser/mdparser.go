@@ -25,8 +25,6 @@ import (
 var markdown goldmark.Markdown
 var markdownWithMathJax goldmark.Markdown
 
-// var cssStr = bytes.NewBuffer([]byte{})
-
 func init() {
 	sync.OnceFunc(func() {
 		markdown = goldmark.New(
@@ -37,27 +35,38 @@ func init() {
 					Resolver: myResolver{},
 				},
 				highlighting.NewHighlighting(
-					highlighting.WithStyle("monokai"),
 					highlighting.WithGuessLanguage(true),
 					highlighting.WithFormatOptions(
 						chromahtml.ClassPrefix(""),
 						chromahtml.WithClasses(true),
-						chromahtml.WithLineNumbers(true),
-						chromahtml.LineNumbersInTable(true),
 						chromahtml.TabWidth(4),
 					),
-					// highlighting.WithCSSWriter(cssStr),
 					highlighting.WithWrapperRenderer(func(w util.BufWriter, context highlighting.CodeBlockContext, entering bool) {
 						if entering {
-							if lang, ok := context.Language(); ok {
-								w.WriteString(`<div class="highlight language-`)
-								w.Write(lang)
-								w.WriteString(`">`)
-							} else {
-								w.WriteString(`<div class="highlight language-plaintext">`)
+							lang := "code"
+							if l, ok := context.Language(); ok && len(l) > 0 {
+								lang = strings.ToLower(string(l))
+							}
+							if lang == "plaintext" {
+								lang = "text"
+							}
+							w.WriteString(`<figure class="code-block`)
+							if !context.Highlighted() {
+								w.WriteString(` is-plain`)
+							}
+							w.WriteString(`"><figcaption class="code-block-bar"><span class="code-lang">`)
+							_, _ = w.Write(util.EscapeHTML([]byte(lang)))
+							w.WriteString(`</span><button class="code-copy-btn" type="button" aria-label="复制代码" title="复制代码">`)
+							w.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`)
+							w.WriteString(`<span class="code-copy-text">复制</span></button></figcaption>`)
+							if !context.Highlighted() {
+								w.WriteString(`<pre class="chroma"><code>`)
 							}
 						} else {
-							w.WriteString("</div>")
+							if !context.Highlighted() {
+								w.WriteString(`</code></pre>`)
+							}
+							w.WriteString("</figure>")
 						}
 					}),
 				),

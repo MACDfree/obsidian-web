@@ -33,7 +33,7 @@ go run -tags sqlite_fts5 main.go    # 直接运行
 - `config/` — 配置单例，通过 `sync.Once` 从 `config.yml` 加载
 - `db/` — GORM 模型（`Note`、`AttachInfo`、`NoteAttachment`、`NoteLink`、`Comment`）及所有数据库查询。还包含 `BacklinkInfo`、`TagCount` 响应类型和敏感词黑名单（`IsContentBlocked`）
 - `handler/` — Gin HTTP 处理器，处理笔记、标签、搜索、附件、认证、评论（增删改查+管理）、git 拉取和静态文件
-- `mdparser/` — Goldmark markdown 处理流程，支持 wikilink 解析、语法高亮（Chroma/Monokai）、MathJax 和自定义图片渲染
+- `mdparser/` — Goldmark markdown 处理流程，支持 wikilink 解析、语法高亮（Chroma，深浅色主题自适应配色）、MathJax 和自定义图片渲染
 - `noteloader/` — 笔记库扫描器，解析 frontmatter，构建 SQLite 索引，创建笔记链接和笔记附件关系
 - `server/` — 路由设置、中间件注册、模板加载（使用 Sprig funcmap 的 multitemplate）
 - `middleware/` — 认证、会话（内存 `memstore`）、日志（Gin formatter）、错误页面
@@ -45,7 +45,7 @@ go run -tags sqlite_fts5 main.go    # 直接运行
 
 **评论系统**：支持嵌套评论（父子树结构）、基于 IP 的限流（10 分钟内 3 条）、敏感词黑名单过滤和管理员管理（隐藏/删除）。评论存储在独立的 SQLite 数据库（`data/comments.db`）中。
 
-**Markdown 处理流程**：Goldmark + GFM，`[[wikilink]]` 解析（→ 根据文件扩展名解析为 `/note/` 或 `/attachment/`）、Chroma 语法高亮（Monokai，行号）、可选 MathJax（通过 frontmatter 中的 `mathjax: true` 启用）、YAML frontmatter 提取、纯文件名图片路径自动添加前缀、h2/h3 标题锚点与文内目录（TOC）。
+**Markdown 处理流程**：Goldmark + GFM，`[[wikilink]]` 解析（→ 根据文件扩展名解析为 `/note/` 或 `/attachment/`）、Chroma 语法高亮（深浅色主题自适应配色、CSS 行号、复制按钮）、可选 MathJax（通过 frontmatter 中的 `mathjax: true` 启用）、YAML frontmatter 提取、纯文件名图片路径自动添加前缀、h2/h3 标题锚点与文内目录（TOC）。
 
 **UI**：深色模式（跟随系统偏好，导航栏按钮手动切换并记忆到 localStorage）、PWA manifest（手机可添加到主屏幕）、RSS 订阅链接。
 
