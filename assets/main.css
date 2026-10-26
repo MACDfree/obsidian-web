@@ -418,13 +418,6 @@ img { max-width: 100%; }
 }
 
 .post-content { font-size: 1.02rem; }
-.post-content > p:first-child::first-letter {
-  float: left;
-  margin: .08em .12em 0 0;
-  color: var(--accent);
-  font-size: 4.3em;
-  line-height: .78;
-}
 
 .post-content p { margin: 0 0 1.35em; }
 .post-content h1,
@@ -903,7 +896,6 @@ footer p { margin: .15rem 0; }
   .comment-textarea,
   .comment-submit-btn { grid-column: 1; }
   .post-title { font-size: clamp(2.35rem, 14vw, 4rem); }
-  .post-content > p:first-child::first-letter { font-size: 3.7em; }
   .post-content .code-block pre.chroma { padding-right: .8rem; padding-left: 1rem; background-image: none; font-size: .74rem; }
   .post-content .code-block .line { text-indent: 0; }
   .post-content .code-block .line::before { display: none; }
