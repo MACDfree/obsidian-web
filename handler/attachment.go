@@ -67,38 +67,26 @@ func resolveRegularFile(baseDir, userPath string) (string, bool) {
 }
 
 func Attachment(ctx *gin.Context) {
-	fileName := ctx.Param("attach")
-
-	// 检查路径遍历攻击
-	if strings.Contains(fileName, "..") {
-		ctx.Status(400)
-		return
-	}
-
-	// 安全连接路径
-	baseDir := filepath.Join(config.Get().NotePath, config.Get().AttachmentPath)
-	safePath, ok := safeJoin(baseDir, fileName)
-	if !ok {
-		ctx.Status(400)
-		return
-	}
-
-	// 获取附件的公开状态
-	isPublic, exists := db.GetAttachPublishStatus(fileName)
-
-	if !exists {
+	fileName := strings.TrimPrefix(ctx.Param("attach"), "/")
+	if fileName == "" || filepath.IsAbs(fileName) || filepath.Clean(fileName) != fileName {
 		ctx.Status(404)
 		return
 	}
-
-	// 如果附件不公开，需要检查登录状态
-	if !isPublic {
-		isLogin := ctx.MustGet("isLogin").(bool)
-		if !isLogin {
-			ctx.Status(404)
-			return
-		}
+	info, err := db.GetAttachInfoByName(fileName)
+	if err != nil {
+		ctx.Status(404)
+		return
 	}
-
+	isPublic, exists := db.GetAttachPublishStatus(info.AttachName)
+	if !exists || (!isPublic && !ctx.MustGet("isLogin").(bool)) {
+		ctx.Status(404)
+		return
+	}
+	baseDir := filepath.Join(config.Get().NotePath, config.Get().AttachmentPath)
+	safePath, ok := resolveRegularFile(baseDir, info.AttachName)
+	if !ok {
+		ctx.Status(404)
+		return
+	}
 	ctx.File(safePath)
 }

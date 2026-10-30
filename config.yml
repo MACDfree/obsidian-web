@@ -1,5 +1,5 @@
 note_path: "/Users/macd/code/obnote"
-ignore_paths: [".git", "Excalidraw", "templates"]
+ignore_paths: [".git", "templates"]
 attachment_path: "attachments"
 paginate: 20
 title: "macd's onote"

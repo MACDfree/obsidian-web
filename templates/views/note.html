@@ -18,6 +18,102 @@
 <meta itemprop="dateModified" content="{{date "2006-01-02T15:04:05Z07:00" .info.Updated }}">
 <meta itemprop="keywords" content="{{join ", " .info.Tags}}">
 
+<script type="module">
+    const root = document.querySelector('.post-content');
+    let needsMath = false;
+    let excalidrawModule;
+    function getExcalidrawModule() {
+        if (!excalidrawModule) {
+            excalidrawModule = import('/assets/excalidraw.js').catch(error => {
+                excalidrawModule = undefined;
+                throw error;
+            });
+        }
+        return excalidrawModule;
+    }
+    function queueExcalidraw(container) {
+        if (!container.querySelector('.excalidraw-viewer')) return;
+        void getExcalidrawModule().then(module => module.renderExcalidraw(container)).catch(error => {
+            container.querySelectorAll('.excalidraw-viewer:not([data-rendering])').forEach(viewer => {
+                viewer.textContent = '画布加载失败，请检查网络后刷新。';
+            });
+            console.error('画布加载失败', error);
+        });
+    }
+    if (root) {
+        if (root.querySelector('.excalidraw-viewer') || Array.from(root.querySelectorAll('.note-embed')).some(embed => /\.excalidraw(?:\.md)?$/i.test(embed.dataset.target))) {
+            void getExcalidrawModule().then(module => module.preloadExcalidraw()).catch(() => {});
+        }
+        queueExcalidraw(root);
+    }
+    async function loadEmbeds(container, source, ancestors) {
+        const embeds = Array.from(container.querySelectorAll('.note-embed'));
+        await Promise.all(embeds.map(async placeholder => {
+            const target = placeholder.dataset.target;
+            const fragment = placeholder.dataset.fragment;
+            if (ancestors.length >= 8) { placeholder.textContent = '嵌入层级过深'; return; }
+            const params = new URLSearchParams({source, target, fragment});
+            try {
+                const response = await fetch('/api/embed?' + params, {credentials: 'same-origin'});
+                if (!response.ok) throw new Error('unavailable');
+                const result = await response.json();
+                const identity = result.path + '\0' + fragment;
+                if (ancestors.includes(identity)) { placeholder.textContent = '无法嵌入循环引用'; return; }
+                const content = document.createElement('div');
+                content.className = 'embedded-note';
+                content.innerHTML = result.html;
+                if (content.querySelector('.excalidraw-viewer')) content.classList.add('embedded-drawing');
+                content.querySelectorAll('[id]').forEach(element => element.removeAttribute('id'));
+                content.querySelectorAll('a[href^="#"]').forEach(link => {
+                    link.href = '/note/' + result.path.split('/').map(encodeURIComponent).join('/') + link.getAttribute('href');
+                });
+                placeholder.replaceWith(content);
+                queueExcalidraw(content);
+                needsMath = needsMath || result.mathjax;
+                await loadEmbeds(content, result.path, ancestors.concat(identity));
+            } catch (_) { placeholder.textContent = '嵌入笔记不存在或无访问权限；私有笔记请先登录。'; }
+        }));
+    }
+    if (root) await loadEmbeds(root, root.dataset.notePath, [root.dataset.notePath + '\0']);
+    if (needsMath) {
+        if (!document.getElementById('MathJax-script')) {
+            const script = document.createElement('script');
+            script.id = 'MathJax-script';
+            script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+            document.head.appendChild(script);
+        } else {
+            const typeset = () => {
+                if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([root]);
+            };
+            if (window.MathJax && window.MathJax.typesetPromise) typeset();
+            else document.getElementById('MathJax-script').addEventListener('load', typeset, {once: true});
+        }
+    }
+    const diagrams = [];
+    document.querySelectorAll('.post-content .code-block').forEach(block => {
+        const language = block.querySelector('.code-lang');
+        const code = block.querySelector('pre code');
+        if (language && code && language.textContent.trim().toLowerCase() === 'mermaid') diagrams.push([block, code.textContent]);
+    });
+    document.querySelectorAll('.post-content pre > code.language-mermaid').forEach(code => diagrams.push([code.parentElement, code.textContent]));
+    if (diagrams.length) {
+        try {
+            const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs');
+            mermaid.initialize({ startOnLoad: false, securityLevel: 'strict' });
+            for (let i = 0; i < diagrams.length; i++) {
+                const [block, source] = diagrams[i];
+                try {
+                    const { svg } = await mermaid.render('mermaid-diagram-' + i, source);
+                    const container = document.createElement('div');
+                    container.className = 'mermaid-diagram';
+                    container.innerHTML = svg;
+                    block.replaceWith(container);
+                } catch (error) { console.error('Mermaid 图表渲染失败', error); }
+            }
+        } catch (error) { console.error('Mermaid 加载失败', error); }
+    }
+</script>
+
 {{- if .ExtInfo.mathjax -}}
 <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 {{- end -}}
@@ -40,7 +136,7 @@
         </ul>
     </details>
     {{- end -}}
-    <div class="post-content">
+    <div class="post-content" data-note-path="{{.info.FullTitle}}">
         {{.content}}
     </div>
     <footer class="post-footer">

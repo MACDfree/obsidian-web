@@ -2,7 +2,7 @@ package mdparser
 
 import (
 	"bytes"
-	"path/filepath"
+	"obsidian-web/linkutil"
 	"strings"
 	"sync"
 
@@ -30,46 +30,12 @@ func init() {
 		markdown = goldmark.New(
 			goldmark.WithExtensions(
 				extension.GFM,
+				&highlightExtension{},
 				&frontmatter.Extender{},
 				&wikilink.Extender{
 					Resolver: myResolver{},
 				},
-				highlighting.NewHighlighting(
-					highlighting.WithGuessLanguage(true),
-					highlighting.WithFormatOptions(
-						chromahtml.ClassPrefix(""),
-						chromahtml.WithClasses(true),
-						chromahtml.TabWidth(4),
-					),
-					highlighting.WithWrapperRenderer(func(w util.BufWriter, context highlighting.CodeBlockContext, entering bool) {
-						if entering {
-							lang := "code"
-							if l, ok := context.Language(); ok && len(l) > 0 {
-								lang = strings.ToLower(string(l))
-							}
-							if lang == "plaintext" {
-								lang = "text"
-							}
-							w.WriteString(`<figure class="code-block`)
-							if !context.Highlighted() {
-								w.WriteString(` is-plain`)
-							}
-							w.WriteString(`"><figcaption class="code-block-bar"><span class="code-lang">`)
-							_, _ = w.Write(util.EscapeHTML([]byte(lang)))
-							w.WriteString(`</span><button class="code-copy-btn" type="button" aria-label="复制代码" title="复制代码">`)
-							w.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`)
-							w.WriteString(`<span class="code-copy-text">复制</span></button></figcaption>`)
-							if !context.Highlighted() {
-								w.WriteString(`<pre class="chroma"><code>`)
-							}
-						} else {
-							if !context.Highlighted() {
-								w.WriteString(`</code></pre>`)
-							}
-							w.WriteString("</figure>")
-						}
-					}),
-				),
+				newHighlighting(),
 			),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),
@@ -79,6 +45,14 @@ func init() {
 				html.WithXHTML(),
 				renderer.WithNodeRenderers(
 					util.Prioritized(&ObsidianRenderer{}, 999),
+					util.Prioritized(&calloutRenderer{}, 998),
+					util.Prioritized(&mermaidRenderer{}, 997),
+					util.Prioritized(&embedRenderer{}, 996),
+					util.Prioritized(&blockRenderer{}, 995),
+					util.Prioritized(&imageEmbedRenderer{}, 994),
+					util.Prioritized(&mediaEmbedRenderer{}, 993),
+					util.Prioritized(&noteLinkRenderer{fallback: &wikilink.Renderer{Resolver: myResolver{}}}, 100),
+					util.Prioritized(&markdownLinkRenderer{}, 99),
 				),
 			),
 		)
@@ -86,11 +60,13 @@ func init() {
 		markdownWithMathJax = goldmark.New(
 			goldmark.WithExtensions(
 				extension.GFM,
+				&highlightExtension{},
 				&frontmatter.Extender{},
 				&wikilink.Extender{
 					Resolver: myResolver{},
 				},
 				mathjax.MathJax,
+				newHighlighting(),
 			),
 			goldmark.WithParserOptions(
 				parser.WithAutoHeadingID(),
@@ -100,17 +76,57 @@ func init() {
 				html.WithXHTML(),
 				renderer.WithNodeRenderers(
 					util.Prioritized(&ObsidianRenderer{}, 999),
+					util.Prioritized(&calloutRenderer{}, 998),
+					util.Prioritized(&mermaidRenderer{}, 997),
+					util.Prioritized(&embedRenderer{}, 996),
+					util.Prioritized(&blockRenderer{}, 995),
+					util.Prioritized(&imageEmbedRenderer{}, 994),
+					util.Prioritized(&mediaEmbedRenderer{}, 993),
+					util.Prioritized(&noteLinkRenderer{fallback: &wikilink.Renderer{Resolver: myResolver{}}}, 100),
+					util.Prioritized(&markdownLinkRenderer{}, 99),
 				),
 			),
 		)
 	})()
 }
 
-var exts = []string{
-	".png",
-	".pdf",
-	".jpg",
-	".zip",
+func newHighlighting() goldmark.Extender {
+	return highlighting.NewHighlighting(
+		highlighting.WithGuessLanguage(true),
+		highlighting.WithFormatOptions(
+			chromahtml.ClassPrefix(""),
+			chromahtml.WithClasses(true),
+			chromahtml.TabWidth(4),
+		),
+		highlighting.WithWrapperRenderer(func(w util.BufWriter, context highlighting.CodeBlockContext, entering bool) {
+			if entering {
+				lang := "code"
+				if l, ok := context.Language(); ok && len(l) > 0 {
+					lang = strings.ToLower(string(l))
+				}
+				if lang == "plaintext" {
+					lang = "text"
+				}
+				w.WriteString(`<figure class="code-block`)
+				if !context.Highlighted() {
+					w.WriteString(` is-plain`)
+				}
+				w.WriteString(`"><figcaption class="code-block-bar"><span class="code-lang">`)
+				_, _ = w.Write(util.EscapeHTML([]byte(lang)))
+				w.WriteString(`</span><button class="code-copy-btn" type="button" aria-label="复制代码" title="复制代码">`)
+				w.WriteString(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`)
+				w.WriteString(`<span class="code-copy-text">复制</span></button></figcaption>`)
+				if !context.Highlighted() {
+					w.WriteString(`<pre class="chroma"><code>`)
+				}
+			} else {
+				if !context.Highlighted() {
+					w.WriteString(`</code></pre>`)
+				}
+				w.WriteString("</figure>")
+			}
+		}),
+	)
 }
 
 type myResolver struct {
@@ -121,8 +137,7 @@ func (myResolver) ResolveWikilink(n *wikilink.Node) (destination []byte, err err
 	dest := make([]byte, lo.Max([]int{len([]byte("/note/")), len([]byte("/attachment/"))})+len(n.Target)+len("#")+len(n.Fragment))
 	var i int
 	if len(n.Target) > 0 {
-		ext := filepath.Ext(string(n.Target))
-		if lo.Contains(exts, ext) {
+		if linkutil.IsAttachment(string(n.Target)) {
 			i += copy(dest[i:], []byte("/attachment/"))
 			i += copy(dest[i:], n.Target)
 		} else {
@@ -202,12 +217,33 @@ type TocItem struct {
 }
 
 func ConvertToHTML(src []byte, withMathJax bool) (string, []TocItem, error) {
+	return ConvertFragmentToHTML(src, withMathJax, "")
+}
+
+func ConvertFragmentToHTML(src []byte, withMathJax bool, fragment string) (string, []TocItem, error) {
+	return ConvertWithResolver(src, withMathJax, fragment, nil)
+}
+
+// ConvertWithResolver 解析普通 wikilink 的目标；嵌入仍由独立请求处理。
+func ConvertWithResolver(src []byte, withMathJax bool, fragment string, resolve func(string) (string, bool)) (string, []TocItem, error) {
 	md := markdown
 	if withMathJax {
 		md = markdownWithMathJax
 	}
 
 	doc := md.Parser().Parse(text.NewReader(src))
+	prepareImageEmbeds(doc, src)
+	prepareMediaEmbeds(doc)
+	prepareEmbeds(doc)
+	prepareNoteLinks(doc, resolve)
+	prepareMarkdownLinks(doc, resolve)
+	prepareMermaid(doc, src)
+	prepareCallouts(doc, src)
+	prepareStandaloneBlockIDs(doc, src)
+	prepareAnchors(doc, src)
+	if err := selectFragment(doc, fragment); err != nil {
+		return "", nil, err
+	}
 	toc := collectToc(doc, src)
 
 	var htmlBuf bytes.Buffer

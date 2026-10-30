@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"obsidian-web/config"
 	"obsidian-web/db"
+	"obsidian-web/excalidraw"
 	"obsidian-web/logger"
 	"obsidian-web/mdparser"
 	"os"
@@ -136,15 +137,11 @@ func NotePage(ctx *gin.Context) {
 		return
 	}
 
-	// 解决登录后页面缓存导致不刷新的问题
-	isLoginStr := "0"
+	// 笔记链接解析依赖其他笔记的路径和权限，不能只用当前文件的哈希判断页面是否过期。
 	if isLogin {
-		isLoginStr = "1"
-	}
-	ifNoneMatch := ctx.GetHeader("If-None-Match")
-	if ifNoneMatch == "\""+note.MD5+isLoginStr+"\"" {
-		ctx.Status(304)
-		return
+		ctx.Header("Cache-Control", "private, no-store")
+	} else {
+		ctx.Header("Cache-Control", "no-cache")
 	}
 
 	source, err := os.ReadFile(note.Path)
@@ -154,9 +151,17 @@ func NotePage(ctx *gin.Context) {
 		return
 	}
 
-	withMathJax := note.ExtInfo != nil && note.ExtInfo["mathjax"] != nil && note.ExtInfo["mathjax"].(bool)
+	withMathJax, _ := note.ExtInfo["mathjax"].(bool)
+	_, marked := note.ExtInfo["excalidraw-plugin"]
+	source, drawing, _ := excalidraw.Extract(source, marked || strings.HasSuffix(strings.ToLower(note.FullTitle), ".excalidraw"))
 
-	htmlStr, toc, err := mdparser.ConvertToHTML(source, withMathJax)
+	htmlStr, toc, err := mdparser.ConvertWithResolver(source, withMathJax, "", func(target string) (string, bool) {
+		resolved, err := db.ResolveNoteLink(note.FullTitle, target, isLogin)
+		if err != nil {
+			return "", false
+		}
+		return resolved.FullTitle, true
+	})
 
 	if err != nil {
 		logger.Error(errors.WithStack(err))
@@ -164,7 +169,7 @@ func NotePage(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Header("ETag", "\""+note.MD5+isLoginStr+"\"")
+	htmlStr += drawing
 
 	// 获取反向链接
 	backlinks, err := db.GetBacklinks(note.ID, isLogin)
@@ -242,4 +247,40 @@ type SearchResult struct {
 	FullTitle string
 	HitTitle  string
 	HitText   []string
+}
+
+// EmbeddedNote 只返回当前访问者可读取的笔记片段。
+func EmbeddedNote(ctx *gin.Context) {
+	source := ctx.Query("source")
+	target := ctx.Query("target")
+	isLogin := ctx.MustGet("isLogin").(bool)
+	note, err := db.ResolveNoteLink(source, target, isLogin)
+	if err != nil {
+		ctx.Status(404)
+		return
+	}
+	content, err := os.ReadFile(note.Path)
+	if err != nil {
+		ctx.Status(404)
+		return
+	}
+	math, _ := note.ExtInfo["mathjax"].(bool)
+	_, marked := note.ExtInfo["excalidraw-plugin"]
+	content, drawing, _ := excalidraw.Extract(content, marked || strings.HasSuffix(strings.ToLower(note.FullTitle), ".excalidraw"))
+	html, _, err := mdparser.ConvertWithResolver(content, math, ctx.Query("fragment"), func(target string) (string, bool) {
+		resolved, err := db.ResolveNoteLink(note.FullTitle, target, isLogin)
+		if err != nil {
+			return "", false
+		}
+		return resolved.FullTitle, true
+	})
+	if err != nil {
+		ctx.Status(404)
+		return
+	}
+	if ctx.Query("fragment") == "" {
+		html += drawing
+	}
+	ctx.Header("Cache-Control", "private, no-store")
+	ctx.JSON(200, gin.H{"path": note.FullTitle, "html": html, "mathjax": math})
 }

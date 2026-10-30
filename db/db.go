@@ -1,10 +1,12 @@
 package db
 
 import (
+	"errors"
 	"io"
 	"log"
 	"obsidian-web/config"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -140,7 +142,10 @@ func ListNoteByTag(isLogin bool, tag string) ([]Note, error) {
 
 func GetNoteByPath(fullPath string) (*Note, error) {
 	note := &Note{}
-	result := db.Where("full_title in (?,?)", fullPath, fullPath+"/_index").Take(note)
+	result := db.Where("full_title = ?", fullPath).Take(note)
+	if result.Error == gorm.ErrRecordNotFound {
+		result = db.Where("full_title = ?", fullPath+"/_index").Take(note)
+	}
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -208,23 +213,27 @@ func DeleteAllNoteAttachments() error {
 
 // GetAttachInfoByName 根据附件名称查询附件（支持精确匹配和文件名匹配）
 func GetAttachInfoByName(name string) (*AttachInfo, error) {
-	attachInfo := &AttachInfo{}
-	// 先尝试精确匹配
-	result := db.Where("attach_name = ?", name).Take(attachInfo)
+	var exact AttachInfo
+	result := db.Where("attach_name = ?", name).Take(&exact)
 	if result.Error == nil {
-		return attachInfo, nil
+		return &exact, nil
 	}
-	// 如果精确匹配失败，尝试文件名匹配
-	result = db.Where("attach_name LIKE ?", "%/"+name).Take(attachInfo)
-	if result.Error == nil {
-		return attachInfo, nil
+	if result.Error != gorm.ErrRecordNotFound {
+		return nil, result.Error
 	}
-	// 最后尝试直接文件名匹配（无路径）
-	result = db.Where("attach_name = ?", name).Take(attachInfo)
+	// 仅在唯一匹配时允许按文件名查找，防止同名文件权限混淆。
+	if strings.Contains(name, "/") {
+		return nil, gorm.ErrRecordNotFound
+	}
+	var matches []AttachInfo
+	result = db.Where("attach_name LIKE ? ESCAPE '\\'", "%/"+escapeLike(name)).Limit(2).Find(&matches)
 	if result.Error != nil {
 		return nil, result.Error
 	}
-	return attachInfo, nil
+	if len(matches) != 1 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &matches[0], nil
 }
 
 // CreateNoteAttachment 创建笔记-附件关联
@@ -311,4 +320,63 @@ func GetBacklinks(noteID uint, isLogin bool) ([]BacklinkInfo, error) {
 
 	err := query.Scan(&results).Error
 	return results, err
+}
+
+// ResolveNoteLink 优先解析带目录的根路径；显式 ./ 或 ../ 使用当前笔记目录。
+// 无法确定唯一目标或无权限时返回未找到。
+func ResolveNoteLink(source, target string, isLogin bool) (*Note, error) {
+	target = strings.TrimSpace(target)
+	if strings.HasSuffix(strings.ToLower(target), ".md") {
+		target = target[:len(target)-3]
+	}
+	if target == "" {
+		target = source
+	}
+	explicitRelative := strings.HasPrefix(target, "./") || strings.HasPrefix(target, "../")
+	relative := path.Clean(path.Join(path.Dir(source), target))
+	validRelative := relative != "." && relative != ".." && !strings.HasPrefix(relative, "../")
+	var paths []string
+	if explicitRelative {
+		if !validRelative {
+			return nil, gorm.ErrRecordNotFound
+		}
+		paths = append(paths, relative)
+	} else if strings.Contains(target, "/") {
+		paths = append(paths, target)
+		if validRelative && relative != target {
+			paths = append(paths, relative)
+		}
+	} else {
+		if validRelative {
+			paths = append(paths, relative)
+		}
+		if target != relative {
+			paths = append(paths, target)
+		}
+	}
+	for _, candidate := range paths {
+		note, err := GetNoteByPath(candidate)
+		if err == nil {
+			if !isLogin && !note.Publish {
+				return nil, gorm.ErrRecordNotFound
+			}
+			return note, nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, err
+		}
+	}
+	if explicitRelative {
+		return nil, gorm.ErrRecordNotFound
+	}
+
+	var notes []Note
+	q := db.Where("title = ? OR EXISTS (SELECT 1 FROM json_each(notes.aliases) WHERE json_each.value = ?) OR full_title LIKE ? ESCAPE '\\'", target, target, "%/"+escapeLike(target))
+	if err := q.Limit(2).Find(&notes).Error; err != nil {
+		return nil, err
+	}
+	if len(notes) != 1 || (!isLogin && !notes[0].Publish) {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &notes[0], nil
 }
